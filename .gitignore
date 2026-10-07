@@ -11,19 +11,14 @@ __pycache__/
 venv/
 dist/
 
-# 本地依赖（--target 安装，不入仓）
-.pylibs/
-
 # 构建期数据库：主库入仓（14.8 MB，便于他人直接查询，不必从 PDF 重建）
 # 仅 WAL 为运行时临时文件，忽略
 data/*.duckdb.wal
 
-# 中间产物（可从 PDF 重建）
-data/cache/
-.cache/
-build/*.png
-build/*.log
-build/*.err
+# 运行日志与错误日志（一律不入库）
+*.log
+*.err
+logs/
 
 # 底本 PDF（体积大且有版权，本地保留）
 *.pdf
