@@ -1,0 +1,31 @@
+# 密钥与本地配置（绝不入库）
+.env
+*.env
+!.env.example
+config.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+
+# 本地依赖（--target 安装，不入仓）
+.pylibs/
+
+# 构建期数据库（可由 PDF 一键重建，不必入仓）
+data/*.duckdb
+data/*.duckdb.wal
+
+# 中间产物（可从 PDF 重建）
+data/cache/
+.cache/
+build/*.png
+
+# 底本 PDF（体积大且有版权，本地保留）
+*.pdf
+
+# 系统
+.DS_Store
+Thumbs.db

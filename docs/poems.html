@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>诗词 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="on">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a></nav>
+</header>
+<main>
+<h2>诗词本体</h2>
+<div class="card small">体裁：
+<select id="genre"><option value="">全部</option></select>
+关键词：<input id="kw" placeholder="如 落花 / 判词 / 黛玉"></div>
+<div id="list"></div></main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+fetch('data/poems.json').then(r=>r.json()).then(ps=>{
+  const box=document.getElementById('list');
+  const genres=[...new Set(ps.map(p=>p.genre))].sort();
+  const gsel=document.getElementById('genre');
+  genres.forEach(g=>gsel.add(new Option(g,g)));
+  function show(){
+    const g=gsel.value,k=document.getElementById('kw').value.trim();
+    box.innerHTML='';
+    ps.filter(p=>(!g||p.genre===g)&&(!k||p.text.includes(k)||(p.title||'').includes(k)))
+      .forEach(p=>{
+        const d=document.createElement('div');d.className='card';
+        d.innerHTML=`<h3>${p.title||'(无题)'}　<span class="small">${p.genre}·${p.author||'未详'}·第${p.chapter}回</span></h3>
+        <div class="poem">${p.lines.map(l=>l).join('｜')}</div>
+        <div class="small">意象：${(p.images||[]).join('、')||'—'}　句数 ${p.n_lines}　齐言 ${p.main_len}　韵基一致率 ${(p.rhyme||0).toFixed(2)}</div>`;
+        box.appendChild(d);
+      });
+  }
+  gsel.onchange=show;document.getElementById('kw').oninput=show;show();
+});
+</script></body></html>

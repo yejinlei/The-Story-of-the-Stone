@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>图谱 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="on">图谱</a></nav>
+</header>
+<main><h2>本体图谱</h2>
+<div class="card small">节点：人物（红）与居所（绿）；边：亲属 / 主仆 / 情缘 / 居所。
+力导向布局，可拖动页面缩放查看。</div>
+<div class="card" id="graph"></div></main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const el=document.getElementById('graph');
+let nodes=[],links=[],pos=[],vel=[];
+fetch('data/graph.json').then(r=>r.json()).then(g=>{
+  nodes=g.nodes;links=g.links;
+  const idx={};nodes.forEach((n,i)=>idx[n.id]=i);
+  links=links.filter(l=>idx[l.source]!==undefined&&idx[l.target]!==undefined);
+  pos=nodes.map(()=>({x:Math.random()*700+50,y:Math.random()*450+50}));
+  vel=nodes.map(()=>({x:0,y:0}));
+  const adj=nodes.map(()=>[]);
+  links.forEach(l=>{adj[idx[l.source]].push(idx[l.target]);adj[idx[l.target]].push(idx[l.source]);});
+  const deg=nodes.map((_,i)=>adj[i].length);
+  function step(){
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      let dx=pos[j].x-pos[i].x,dy=pos[j].y-pos[i].y;
+      let d2=dx*dx+dy*dy||1,d=Math.sqrt(d2);
+      const rep=1200/d2;
+      vel[i].x-=rep*dx/d;vel[i].y-=rep*dy/d;
+      vel[j].x+=rep*dx/d;vel[j].y+=rep*dy/d;
+    }
+    links.forEach(l=>{
+      const a=idx[l.source],b=idx[l.target];
+      let dx=pos[b].x-pos[a].x,dy=pos[b].y-pos[a].y;
+      let d=Math.sqrt(dx*dx+dy*dy)||1;
+      const f=(d-70)*0.02;
+      vel[a].x+=f*dx/d;vel[a].y+=f*dy/d;
+      vel[b].x-=f*dx/d;vel[b].y-=f*dy/d;
+    });
+    pos.forEach((p,i)=>{
+      vel[i].x*=0.85;vel[i].y*=0.85;
+      p.x+=Math.max(-8,Math.min(8,vel[i].x));
+      p.y+=Math.max(-8,Math.min(8,vel[i].y));
+      p.x=Math.max(20,Math.min(780,p.x));p.y=Math.max(20,Math.min(480,p.y));
+    });
+    draw();requestAnimationFrame(step);
+  }
+  function draw(){
+    let s=`<svg width="800" height="500">`;
+    links.forEach(l=>{const a=pos[idx[l.source]],b=pos[idx[l.target]];
+      s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(158,43,37,.22)" stroke-width="0.6"/>`;});
+    nodes.forEach((n,i)=>{const p=pos[i];const r=3+Math.min(9,deg[i]*0.7);
+      s+=`<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${n.color||'#8b6914'}" opacity="0.8"/>`;
+      if(deg[i]>6)s+=`<text x="${p.x+6}" y="${p.y+4}" font-size="11" fill="#4a4438">${n.name}</text>`;});
+    s+='</svg>';el.innerHTML=s;
+  }
+  step();
+});
+</script></body></html>
