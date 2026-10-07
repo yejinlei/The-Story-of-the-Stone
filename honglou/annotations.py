@@ -91,9 +91,9 @@ def decode_marker(run: str) -> tuple[list[str], str]:
     atype = ""
     for i, ch in enumerate(run):
         if i == 0:
-            editions.append(EDITION_MARK.get(ch, f"未知({hex(ord(ch))})"))
+            editions.append(EDITION_MARK.get(ch, "未详本"))
         elif i == 1:
             atype = TYPE_MARK.get(ch, "")
         else:
-            editions.append(EDITION_MARK.get(ch, f"未知({hex(ord(ch))})"))
+            editions.append(EDITION_MARK.get(ch, "未详本"))
     return editions, atype

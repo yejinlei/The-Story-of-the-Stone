@@ -23,6 +23,8 @@ import pymupdf  # noqa: E402
 
 CN_NUM = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9}
 CHAP_RE = re.compile(r'^第\s*([一二三四五六七八九十]{1,3})\s*回\s*(.+)$')
+# 回前常单独成一行作「第 四 回」样式的回次标记（字间带空格）
+HEAD_NUM_RE = re.compile(r'^第([一二三四五六七八九十]{1,3})回$')
 NOTE_MARK = re.compile(r'^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]')
 # 页眉页脚噪声
 NOISE_RE = re.compile(
@@ -98,6 +100,109 @@ def _page_chapter(page_text: str) -> tuple[int | None, str]:
         if m and 4 <= len(m.group(2).strip()) <= 32:
             return cn2int(m.group(1)), m.group(2).strip()
     return None, ''
+
+
+def _head_marks(blocks: list['Block']) -> list[tuple[int, int]]:
+    """按阅读顺序找每一回的起点：形如「第 X 回」的回次行。
+
+    PDF 排版里「第 X 回」多以回前批字体单独成行（且字间带空格，如「第 四 回」），
+    紧随其后才是回目标题块。此二者是唯一可靠的分回依据。
+    """
+    out: list[tuple[int, int]] = []
+    for i, b in enumerate(blocks):
+        t = (b.text or '').replace(' ', '').strip()
+        m = HEAD_NUM_RE.match(t)
+        if not m:
+            continue
+        n = cn2int(m.group(1))
+        if not n:
+            continue
+        if out and (i - out[-1][0] <= 2 or out[-1][1] >= n):
+            continue                      # 同一回的重复标注
+        out.append((i, n))
+    return out
+
+
+def _heading_title(blocks: list['Block'], start: int) -> str:
+    """回次行之后的首个（可能被拆行的）回目名称。"""
+    title = ''
+    for j in range(start, min(start + 5, len(blocks))):
+        b = blocks[j]
+        if b.kind == '回目':
+            title += b.text.strip()
+        elif title:
+            break
+    return title
+
+
+ANNO_KINDS = ('批语', '回前批', '回后批', '校记')
+_TAIL_PUNCT = '。！？；：”」』）…'
+
+
+def _merge_strays(blocks: list[Block]) -> list[Block]:
+    """把夹在批语中间、因罕用字改用宋体而被误判为「正文」的碎片并回批语。
+
+    例如第四十四回回首诗「莺莺燕燕闘芳菲」中的「闘」、第七十八回「《姽婳词》」
+    中的「姽婳」，在 PDF 里换了字体字号，被 classify() 认成正文。
+    """
+    out: list[Block] = []
+    i = 0
+    while i < len(blocks):
+        b = blocks[i]
+        prev = out[-1] if out else None
+        nxt = blocks[i + 1] if i + 1 < len(blocks) else None
+        if (prev is not None and b.kind == '正文' and 0 < len(b.text or '') <= 4
+                and not any(c in (b.text or '') for c in '。！？')
+                and prev.kind in ANNO_KINDS
+                and prev.page in (b.page, b.page - 1)
+                and (not prev.text or prev.text[-1] not in _TAIL_PUNCT)):
+            prev.text += b.text
+            i += 1
+            # 碎片原是「批语—碎片—批语」被腰斩的，把后半截也接回来
+            while (nxt is not None and nxt.kind == prev.kind and nxt.ink == prev.ink
+                   and nxt.page == prev.page
+                   and (prev.text or '')[-1:] not in _TAIL_PUNCT
+                   and not (nxt.text or '')[:1] in '“《（'):
+                prev.text += nxt.text
+                i += 1
+                nxt = blocks[i + 1] if i + 1 < len(blocks) else None
+            continue
+        out.append(b)
+        i += 1
+    return out
+
+
+def _assign_blocks(blocks: list['Block'], chapters: dict) -> None:
+    """以回次标记把全局有序的块回填到各回。
+
+    旧实现是「块 → 所在页 → 页所属回」：一页常同时含上回之末与下回之首，
+    页级检测（要求「第X回+回目」同处一行）又常认不出回首，
+    于是回首被并入上一回，结果是每回首页缺开头、末尾多带下一回开头。
+    此处改以回次标记为唯一权威，页归属只作为页码统计的副产品。
+    """
+    for c in chapters.values():
+        c['blocks'] = []
+        c['pages'] = []
+    bounds: list[tuple[int, int, int]] = []
+    marks = _head_marks(blocks)
+    for k, (idx, no) in enumerate(marks):
+        end = marks[k + 1][0] if k + 1 < len(marks) else len(blocks)
+        bounds.append((no, idx, end))
+    if blocks and (not bounds or bounds[0][1] > 0):
+        bounds.insert(0, (0, 0, bounds[0][1] if bounds else len(blocks)))
+    for no, a, b in bounds:
+        title = ''
+        got = chapters.get(no)
+        if got is not None:
+            title = got['title']
+        if not title and no > 0:
+            title = _heading_title(blocks, a)
+        ch = chapters.setdefault(
+            no, dict(no=no, title=title, pages=[], blocks=[]))
+        for blk in blocks[a:b]:
+            ch['blocks'].append(blk)
+            if blk.page not in ch['pages']:
+                ch['pages'].append(blk.page)
 
 
 def extract(save: bool = True) -> dict:
@@ -207,14 +312,9 @@ def extract(save: bool = True) -> dict:
             # other：忽略
         ch['blocks'] = []  # 稍后统一回填
 
-    # 把块按页码回填到各回（块在跨页时归属其所在页所属回）
-    by_page: dict[int, int] = {}
-    for no, ch in chapters.items():
-        for p in ch['pages']:
-            by_page[p] = no
-    for b in blocks:
-        no = by_page.get(b.page, 0)
-        chapters[no]['blocks'].append(b)
+    # 罕用字造成的伪正文碎片先归并，再按回次标记回填到各回
+    blocks = _merge_strays(blocks)
+    _assign_blocks(blocks, chapters)
 
     chs = []
     for k in sorted(chapters):

@@ -237,8 +237,8 @@ main>*{{animation:rise .55s ease both}}
 
 NAV = [('index.html', '总览'), ('read.html', '正文·脂批'),
        ('entities.html', '本体实体'), ('tree.html', '族谱'),
-       ('money.html', '银钱'), ('cuisine.html', '食单'), ('calendar.html', '岁时'),
-       ('relics.html', '物色'), ('poems.html', '诗词'),
+       ('money.html', '银钱'), ('cuisine.html', '食单'), ('costume.html', '衣冠'),
+       ('calendar.html', '岁时'), ('relics.html', '物色'), ('poems.html', '诗词'),
        ('debate.html', '推演'), ('continuation.html', '续写'),
        ('graph.html', '图谱'), ('mirror.html', '字镜'),
        ('climate.html', '冷暖谱'), ('garden.html', '园图'),

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>衣冠 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="costume.html" class="on">衣冠</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>衣冠谱 · 人人身上都有文章</h2>
+<div class="card small">
+衣裳在《红楼》里从来不是衬<em>着</em>人，而是<em>写</em>人。本体论先立衣冠一门——
+<b>成衣 / 首服 / 足衣 / 佩饰 / 雨具</b>——把雀金裘、凫靥裘、猩猩毡斗篷、
+白狐里鹤氅、紫金冠、抹额、掐金挖云小靴、玉针蓑……逐件录入，注明所主与托意；
+再回正文把这批名物的每一次现身，连前后原文与在场之人一并钩出。
+<b>不为修辞上的好看夸张半分</b>：色字只有在衣裳、缎绫等字的一十四字之内才算「服色」，
+人名只取离它最近的那一个——换言之，此页所呈现的一切冷暖浓淡，都是可用原句复核的。
+</div>
+<div class="card small">已录 <b>30</b> 件衣冠，正文共现身 <b>36</b> 处，涉及 <b>7</b> 回；其中被本次续写接住的，只 <b>0</b> 件，尚有 <b>30</b> 件待接。</div><div class="grid" id="cos-cards"></div>
+
+<h2>只一斗篷 · 第四十九回的雪地群像</h2>
+<div class="card">
+<p class="small">
+第四十九回是全书唯一一回「人人一身行头」的群戏：一夜大雪，众姊妹披着各自的衣裳聚到稻香村。
+第四十九回回末总评撮一篇短文字说得极刻薄，也极公允：
+</p>
+<div class="poem">此文线索在斗篷。宝琴翠羽斗篷，贾母所赐，言其亲也；宝玉红猩猩毡斗篷，为后雪披一衬也；黛玉白狐皮斗篷，明其弱也；李宫裁斗篷是哆啰呢，昭其质也；宝钗斗篷是莲青斗纹锦，致其文也；贾母是大斗篷，尊之词也；凤姐是披着斗篷，恰似掌家人也；湘云有斗篷不穿，着其异样行动也；岫烟无斗篷，叙其穷也。只一斗篷，写得前后照耀生色。</div>
+<p class="small">
+下表把这一回里<b>谁穿着什么</b>逐条排出，一列是原文，一列是脂批的断语（有则有，无则留白）。
+<b>一人配一件衣裳</b>，其人的亲疏、穷通、性情便都写在里面了。
+<b>贾母赐衣即是赐分数</b>：赐予琴儿一件凫靥裘，众人便知老太太疼谁；岫烟一人无氅，不必再说一句穷字。
+</p>
+</div>
+<div class="gwrap">
+  <div class="card samples" id="cos49"></div>
+  <aside class="card gside" id="cos49side"><p class="small">点一行看原文与托意。</p></aside>
+</div>
+
+<h2>服色即性情</h2>
+<div class="card small">
+色只许落在衣边：一十四字之内不见衣裳绫缎等字者不计。于是色有主人。
+下图每人一条，按色系比例摊开，右侧标出其身上被写到的名物件数与主色。
+点一条即见原句——<b>谁偏红，谁偏素，数据自己会说话</b>。
+</div>
+<div class="card"><div class="legend" id="coslegend"></div>
+  <svg id="cosperson" viewBox="0 0 1080 420" preserveAspectRatio="xMidYMin meet"></svg></div>
+<div class="gwrap">
+  <div class="card small" id="cospeople"><p class="small">点一点看此人的衣裳与服色原句。</p></div>
+  <aside class="card gside" id="cospside"></aside>
+</div>
+
+<h2>逐回疏密 · 这笔笔墨自第几回淡下去</h2>
+<div class="card gcanvas">
+  <div class="gtools">
+    <button id="cDens" class="on">千字密度</button>
+    <button id="cAbs">绝对次数</button>
+    <span class="gstat" id="cstat"></span>
+  </div>
+  <svg id="cosseries" viewBox="0 0 1080 300" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="card"><table id="cossegtab"></table></div>
+
+<h2>四段色调</h2>
+<div class="card"><svg id="cossegs" viewBox="0 0 1080 210"
+  preserveAspectRatio="xMidYMid meet"></svg></div>
+
+<h2>名物</h2>
+<div class="card">
+  <div class="gtools" id="coscats"></div>
+</div>
+<div class="gwrap">
+  <div class="card samples" id="coslist"></div>
+  <aside class="card gside" id="cosside"><p class="small">点一件看它的每一次现身。</p></aside>
+</div>
+
+<h2>续写的服色 · 三十回里再没有一笔新的红</h2>
+<div class="card small">
+续写三十回里，明写「穿／披／换／脱」的只有三处：第八十一回「换衣整洁」、
+第八十五回若兰「换上了射衣」、第一百五回湘莲「脱了绫罗，换了布衣」——
+<b>而且都不是为着好看</b>，是为了告别。
+更要紧的是颜色：<b>脂本的红，到续写里几乎不见了</b>。下表两相对照，
+并把续写里仅存的几处「红」逐条列出：<b>其中真正属于贾家的，一笔也没有</b>。
+</div>
+<div class="card"><table id="cosxutab"></table></div>
+<div class="card samples" id="cosxured"></div>
+
+<h2>待接之衣 · 续写诸君的账单</h2>
+<div class="card small">
+凡脂本里给了托意、而本次续写（八十一回以下）不曾复现者，尽在此单。
+衣裳多是细小之物，丢下一两件原不必大惊；这张单子真正的用场在另一处——
+<b>续写者若要接住脂本的草蛇灰线，照单拿去看，一件都不会漏</b>。
+</div>
+<div class="card small" id="cosowedsum"></div>
+<div class="card samples" id="cosowed"></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,CAT='全部',MODE='dens';
+const FAM=D0=>Object.fromEntries(D0.fams.map(f=>[f[0],{name:f[1],color:f[2]}]));
+let FM=null;
+
+function cards(){
+  const s=D.stats;
+  const rows=[['录入衣冠',`${s.items} 件`],['名物现身',`${s.hits} 处 / 涉 ${s.chaps} 回`],
+    ['服色落笔',`${s.colors} 处`],['衣着字总计',`${s.wear} 处`],
+    ['密度之最',`第 ${s.top_ch} 回`],
+    ['脂本 / 续写 千字密度',`${s.dens_main} / ${s.dens_xu}`],
+    ['续写接住',`${s.picked.length} 件`],['待接之衣',`${s.owed} 件`]];
+  $('cos-cards').innerHTML=rows.map(r=>
+    `<div class="card"><div class="small">${esc(r[0])}</div><big>${esc(r[1])}</big></div>`).join('');
+}
+
+function ch49(){
+  const rows=D.ch49;
+  $('cos49').innerHTML=rows.map((r,i)=>
+    `<div><b>${esc(r.who||'—')}</b>`
+    +`<span class="tag">${esc(r.name)}</span>`
+    +`<span class="tag">${esc(r.cat)}</span>`
+    +(r.verdict?`<span class="tag red">脂批：${esc(r.verdict)}</span>`:'')
+    +`<br><span class="small">…${esc(r.ctx)}…</span></div>`).join('');
+  $('cos49').querySelectorAll('div').forEach((el,i)=>{el.style.cursor='pointer';
+    el.onclick=()=>{
+      const r=rows[i];
+      $('cos49side').innerHTML=`<h3>${esc(r.name)}</h3>`
+        +`<p class="small">${esc(r.cat)} · 所主 ${esc(r.owner||'—')}</p>`
+        +(r.symbol&&r.symbol!=='—'?`<p>${esc(r.symbol)}</p>`:'')
+        +(r.verdict?`<p class="small">脂批：${esc(r.verdict)}</p>`:'')
+        +`<p class="small">…${esc(r.ctx)}…</p>`;};});
+}
+
+function people(){
+  const W=1080,PL=118,PR=150,rowH=Math.min(22,(400)/Math.max(1,D.persons.length));
+  let s='';
+  D.persons.forEach((p,i)=>{
+    const y=10+i*rowH, tot=p.fams.reduce((a,f)=>a+f[1],0)||1;
+    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 fill="#3a322a" font-family="serif">${esc(p.name)}</text>`;
+    let x=PL;
+    p.fams.forEach(f=>{
+      const w=(f[1]/tot)*(W-PL-PR);
+      s+=`<rect x=${x} y=${y+3} width=${w} height=${rowH-8} fill="${FM[f[0]].color}" opacity=".78" data-p="${i}.${f[0]}">`
+        +`<title>${esc(p.name)}　${esc(FM[f[0]].name)} ${f[1]} 处</title></rect>`;
+      x+=w;
+    });
+    s+=`<text x=${W-PR+6} y=${y+rowH/2+4} font-size=11 fill="#8a7f6d" font-family="serif">`
+      +`${p.goods} 件 / ${p.colors} 色　主色 ${esc(FM[p.top]?FM[p.top].name:'—')}</text>`;
+  });
+  $('cosperson').innerHTML=s;
+  $('cosperson').querySelectorAll('rect').forEach(el=>el.onclick=()=>{
+    const [i,k]=el.dataset.p.split('.'); side(D.persons[+i],k);});
+  $('coslegend').innerHTML=D.fams.map(f=>
+    `<span><i style="background:${f[2]}"></i>${esc(f[1])}</span>`).join('')
+    +'<span class="small">（按色系比例摊开，每人身上的名物件数、服色处数与主色列于右侧）</span>';
+}
+
+function chips(){
+  $('cospeople').innerHTML='<b>点名字也可见其衣裳：</b>'
+    +D.persons.map((p,i)=>`<span class="nb" data-i="${i}">${esc(p.name)}</span>`).join('');
+  $('cospeople').querySelectorAll('.nb').forEach(el=>el.onclick=()=>side(D.persons[+el.dataset.i],null));
+}
+
+function side(p,k){
+  const goods=D.items.filter(it=>it.hits.some(h=>h.who===p.name));
+  let h=`<h3>${esc(p.name)}</h3><p class="small">身上名物 ${p.goods} 处 · 服色 ${p.colors} 处`;
+  if(k) h+=` · 点看 ${esc(FM[k].name)}`;
+  h+=`</p>`;
+  const cs=D.colors.filter(c=>c.who===p.name&&(!k||c.fam===k)).slice(0,12);
+  h+=cs.map(c=>`<div style="border-bottom:1px dotted #e9ddc7;padding:3px 0">`
+    +`<span class="tag" style="color:${FM[c.fam].color};border-color:${FM[c.fam].color}">${esc(c.term)}</span>`
+    +`<span class="tag">第${c.ch}回</span><br><span class="small">…${esc(c.ctx)}…</span></div>`).join('');
+  if(goods.length){
+    h+=`<p class="small">所著：${goods.map(g=>esc(g.name)).join('、')}</p>`;
+  }
+  $('cospside').innerHTML=h;
+}
+
+function series(){
+  const S=D.series.filter(s=>s.ch>0),W=1080,H=300,PL=46,PB=36;
+  const key=MODE==='dens'?'dens':'wear';
+  const mx=Math.max(...S.map(s=>s[key]),0.001);
+  const x=i=>PL+i*(W-PL-16)/(Math.max(1,S.length-1));
+  let s=`<rect x=${x(S.findIndex(d=>d.src==='续'))} y=16 width=${W-16-x(S.findIndex(d=>d.src==='续'))} `
+    +`height=${H-PB-16} fill="#3b4a6b" opacity=".05"/>`;
+  [0,.5,1].forEach(f=>{const yy=16+(H-PB-16)*f;
+    s+=`<line x1=${PL} y1=${yy} x2=${W-16} y2=${yy} stroke="#e3d9c4"/>`;});
+  S.forEach((d,i)=>{
+    const h=(d[key]/mx)*(H-PB-24);
+    if(h<=0)return;
+    const col=d.src==='续'?'#3b4a6b':'#9e2b25';
+    s+=`<rect x=${x(i)-2.4} y=${H-PB-h} width=4.8 height=${h} fill=${col} opacity="${d.src==='续'?.45:.62}">`
+      +`<title>第${d.ch}回（${d.src==='续'?'续写':'脂本'}）：衣事 ${d.wear} 处（${d.dens}/千字）· 录入名物 ${d.goods} 次</title></rect>`;
+  });
+  [1,20,40,60,80,110].forEach(c=>{const i=S.findIndex(d=>d.ch===c); if(i<0)return;
+    s+=`<text x=${x(i)} y=${H-14} text-anchor="middle" font-size=10.5 fill="#8a7f6d" font-family="serif">${c}</text>`;});
+  [3,6,8,49,52,63].forEach(c=>{const i=S.findIndex(d=>d.ch===c); if(i<0)return;
+    s+=`<circle cx=${x(i)} cy=${(H-PB)-(S[i][key]/mx)*(H-PB-24)} r=3.2 fill="#9e2b25"/>`
+      +`<text x=${x(i)} y=${(H-PB)-(S[i][key]/mx)*(H-PB-24)-8} text-anchor="middle" font-size=10 fill="#9e2b25" font-family="serif">${c}</text>`;});
+  $('cosseries').innerHTML=s;
+  $('cstat').textContent=(MODE==='dens'?'每千字计':'绝对次数')
+    +'：一本 ■ 脂本　■ 续写（淡色）　红点＝第三／六／八／四十九／五十二／六十三回';
+}
+
+function segs(){
+  const W=1080,H=210,PL=118,PB=26,rowH=(H-PB-14)/D.segs.length;
+  let s='';
+  D.segs.forEach((g,i)=>{
+    const tot=g.fams.reduce((a,f)=>a+f[1],0)||1, y=14+i*rowH;
+    s+=`<text x=${PL-10} y=${y+rowH/2} text-anchor="end" font-size=12 fill="#5d5449" font-family="serif">${esc(g.name)}</text>`;
+    let cx=PL;
+    g.fams.forEach(f=>{
+      if(!f[1])return;
+      const w=(f[1]/tot)*(W-PL-160), col=FM[f[0]].color;
+      s+=`<rect x=${cx} y=${y+6} width=${w} height=${rowH-20} fill="${col}" opacity=".75">`
+        +`<title>${esc(g.name)}　${esc(FM[f[0]].name)} ${f[1]} 处（${Math.round(f[1]/tot*100)}%）</title></rect>`;
+      if(w>36) s+=`<text x=${cx+w/2} y=${y+6+(rowH-20)/2+4} text-anchor="middle" font-size=10.5 fill="#fffdf8" font-family="serif">${Math.round(f[1]/tot*100)}%</text>`;
+      cx+=w;
+    });
+    s+=`<text x=${W-150} y=${y+rowH/2} font-size=11 fill="#8a7f6d" font-family="serif">`
+      +`服色 ${g.n} 处 · 名物 ${g.kinds} 种 · ${g.dens}/千字</text>`;
+  });
+  $('cossegs').innerHTML=s;
+  $('cossegtab').innerHTML=`<thead><tr><th>段落</th><th>服色处数</th><th>名物种类</th>`
+    +`<th>衣着字密度（/千字）</th><th>最常现身</th></tr></thead><tbody>`
+    +D.segs.map(g=>`<tr><td>${esc(g.name)}</td><td>${g.n}</td><td>${g.kinds}</td>`
+      +`<td>${g.dens}</td><td>${g.top.map(t=>esc(t[0])+'·'+t[1]).join('　')}</td></tr>`).join('')
+    +`</tbody>`;
+}
+
+function list(){
+  const items=(CAT==='全部'?D.items:D.items.filter(i=>i.cat===CAT));
+  $('coslist').innerHTML=items.map((it,i)=>
+    `<div><span class="tag">${esc(it.cat)}</span><b>${esc(it.name)}</b>`
+    +`<span class="tag red">${it.n} 处</span>`
+    +`<span class="tag">第${it.chapters.slice(0,6).join('、')}回${it.chapters.length>6?'…':''}</span>`
+    +(it.n_xu?`<span class="tag">续写 ${it.n_xu}</span>`:'')
+    +`<br><span class="small">所主 ${esc(it.owner||'—')}：${esc(it.symbol||'')}</span></div>`).join('');
+  $('coslist').querySelectorAll('div').forEach((el,i)=>{el.style.cursor='pointer';
+    el.onclick=()=>item(items[i]);});
+  $('coscats').innerHTML=['全部'].concat(D.cats).map(c=>
+    `<button class="${c===CAT?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $('coscats').querySelectorAll('button').forEach(b=>b.onclick=()=>{CAT=b.dataset.c;list();
+    $('coscats').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+}
+
+function item(it){
+  $('cosside').innerHTML=`<h3>${esc(it.name)}</h3>`
+    +`<p class="small">${esc(it.cat)} · 所主 ${esc(it.owner||'—')} · 现身 ${it.n} 处`
+    +`（脂本 ${it.n-it.n_xu} ／ 续写 ${it.n_xu}）</p><p>${esc(it.symbol||'')}</p>`
+    +it.hits.map(h=>`<div style="border-bottom:1px dotted #e9ddc7;padding:3px 0">`
+      +`<span class="tag">第${h.ch}回</span>`
+      +`<span class="tag${h.src==='续'?' red':''}">${h.src==='续'?'续写':'脂本'}</span>`
+      +(h.who?`<b>${esc(h.who)}</b>`:'')
+      +`<br><span class="small">…${esc(h.ctx)}…</span></div>`).join('');
+}
+
+function xu(){
+  const s=D.stats, pc=(n,t)=>t?Math.round(n/t*100):0;
+  $('cosxutab').innerHTML=`<thead><tr><th>色系</th>`
+    +`<th>脂本前八十回（${s.n_main} 处）</th><th>续写三十回（${s.n_xu} 处）</th></tr></thead><tbody>`
+    +D.fams.map(f=>{
+      const a=(s.fam_main.find(x=>x[0]===f[0])||[0,0])[1],
+            b=(s.fam_xu.find(x=>x[0]===f[0])||[0,0])[1];
+      return `<tr><td><i style="display:inline-block;width:9px;height:9px;`
+        +`border-radius:50%;margin-right:6px;background:${f[2]}"></i>${esc(f[1])}</td>`
+        +`<td>${a}（${pc(a,s.n_main)}%）</td><td>${b}（${pc(b,s.n_xu)}%）</td></tr>`;})
+    +`</tbody>`;
+  $('cosxured').innerHTML=(s.xu_red.length?
+      s.xu_red.map(r=>`<div><span class="tag red">第${r.ch}回 · ${esc(r.term)}</span>`
+        +`<br><span class="small">…${esc(r.ctx)}…</span></div>`).join('')
+    :'<p class="small">续写三十回里，一处也没有。</p>');
+}
+
+function owed(){
+  const s=D.stats;
+  $('cosowedsum').innerHTML='脂本前八十回记<b>衣事 '+s.scenes_main+' 处</b>'
+    +`（每千字 ${s.dens_main} 处），续写三十回只有 <b>${s.scenes_xu} 处</b>`
+    +`（每千字 ${s.dens_xu} 处）；录入的 ${s.items} 件名物，续写接住 `
+    +`<b>${s.picked.length}</b> 件${s.picked.length?'（'+esc(s.picked.join('、'))+'）':''}，`
+    +`尚有 <b>${s.owed}</b> 件待接。`;
+  $('cosowed').innerHTML=D.owed.map(o=>
+    `<div><span class="tag">${esc(o.cat)}</span><b>${esc(o.name)}</b>`
+    +`<span class="tag">首见第${o.ch}回</span>`
+    +`<br><span class="small">所主 ${esc(o.owner||'—')}：${esc(o.symbol||'')}</span></div>`).join('')
+    || '<p class="small">续写已尽数接住。</p>';
+}
+
+fetch('data/costume.json').then(r=>r.json()).then(d=>{
+  D=d;FM=FAM(D);
+  cards();ch49();people();chips();series();segs();list();xu();owed();
+  $('cDens').onclick=()=>{MODE='dens';$('cDens').classList.add('on');$('cAbs').classList.remove('on');series();};
+  $('cAbs').onclick=()=>{MODE='abs';$('cAbs').classList.add('on');$('cDens').classList.remove('on');series();};
+});
+</script></body></html>

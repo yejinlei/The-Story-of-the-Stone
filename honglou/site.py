@@ -11,6 +11,8 @@ money.html        银钱账簿：逐回抽出每笔银钱，以「二十两＝�
 relics.html       物色流转：二十四件器物的传承之链与逐回现身
 calendar.html     岁时行事：十六桩节铺成十二月令，同一节令复沓由内而外
 cuisine.html      食单茶酒谱：八类名物逐回钩出，见招待由杂转而稀薄
+costume.html      衣冠谱：本体论的衣冠一门（成衣/首服/足衣/佩饰/雨具），
+                  第四十九回雪地群像与服色考，并续写待接之衣的账单
 poems.html        诗词本体：体裁、作者、意象、谶应
 debate.html       多 Agent 推演全过程（含技术组的统计证据）
 continuation.html 续写正文 + 风格门禁 + 脂砚斋批点
@@ -32,8 +34,8 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import (annotators, calendar, climate, cuisine, db, garden, graph,
-               imagery, mirror, money, paths, relics, theme, tree)
+from . import (annotators, calendar, climate, costume, cuisine, db, garden,
+               graph, imagery, mirror, money, paths, relics, theme, tree)
 from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
@@ -61,7 +63,7 @@ function render(d){
       if(!state.eds.size||b.editions.some(e=>state.eds.has(e))){
         if(!state.types.size||state.types.has(b.atype||'批语')){
           p.className='anno '+b.ink;
-          p.innerHTML=`<span class="src">${b.editions.join('·')||'批'}${b.atype?'·'+b.atype:''}</span>${esc(b.text)}`;
+          p.innerHTML=`<span class="src">${b.editions.join('·')||'脂批'}${b.atype?'·'+b.atype:''}</span>${esc(b.text)}`;
         } else return;
       } else return;
     }else if(b.kind==='校记'){
@@ -419,6 +421,9 @@ def export_data() -> None:
     # --- 食单与茶酒谱（名物逐回钩沉，见 honglou/cuisine.py）
     cuisine.build(DATA)
 
+    # --- 衣冠谱（成衣/首服/足衣/佩饰/雨具与服色考究，见 honglou/costume.py）
+    costume.build(DATA)
+
     # --- 家族谱系（四卷世系树，见 honglou/tree.py）
     tree.build(DATA)
 
@@ -515,6 +520,10 @@ def build_site() -> Path:
 八类名物逐回钩出，附原文与在场者。实测：宴席之辞的密度并未衰减，
 真正退场的是<b>名物的种类</b>——由中段 1.6 种／万字降至后段 0.96。</p>
 <a href="cuisine.html">进入 →</a></div>
+<div class="card"><h3>衣冠谱</h3><p class="small">本体论的衣冠一门：成衣、首服、足衣、佩饰、雨具。
+第四十九回雪地群像<b>一人一件衣裳</b>，脂批一句「只一斗篷，写得前后照耀生色」点破机关；
+另有服色考（色字须落在衣边才算数）、逐回疏密，以及一张<b>续写待接之衣</b>的账单。</p>
+<a href="costume.html">进入 →</a></div>
 <div class="card"><h3>家族谱系</h3><p class="small">一百二十九条关系拆作直系、配偶、
 房内、侍婢、旁系五类，铺成<b>荣房 / 宁房 / 亲族外戚 / 太虚神话</b>四卷世系树：
 一房一牌位，主位、配偶、妾侍各有所归，虚线是隔代提携、手足与姻娅。</p>
@@ -690,6 +699,18 @@ def build_site() -> Path:
     (SITE / 'cuisine.html').write_text(
         _page('食单', cuisine.BODY, 'cuisine.html', cuisine.JS),
         encoding='utf-8')
+
+    # ---------- costume（衣冠谱）
+    cs_stats = json.loads((DATA / 'costume.json').read_text(encoding='utf-8'))['stats']
+    cos_body = costume.BODY.replace(
+        '<div class="grid" id="cos-cards"></div>',
+        f'<div class="card small">已录 <b>{cs_stats["items"]}</b> 件衣冠，'
+        f'正文共现身 <b>{cs_stats["hits"]}</b> 处，涉及 <b>{cs_stats["chaps"]}</b> 回；'
+        f'其中被本次续写接住的，只 <b>{len(cs_stats["picked"])}</b> 件，'
+        f'尚有 <b>{cs_stats["owed"]}</b> 件待接。</div>'
+        '<div class="grid" id="cos-cards"></div>')
+    (SITE / 'costume.html').write_text(
+        _page('衣冠', cos_body, 'costume.html', costume.JS), encoding='utf-8')
 
     # ---------- tree（家族谱系）
     (SITE / 'tree.html').write_text(
