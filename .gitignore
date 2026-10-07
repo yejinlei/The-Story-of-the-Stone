@@ -22,6 +22,8 @@ data/*.duckdb.wal
 data/cache/
 .cache/
 build/*.png
+build/*.log
+build/*.err
 
 # 底本 PDF（体积大且有版权，本地保留）
 *.pdf
