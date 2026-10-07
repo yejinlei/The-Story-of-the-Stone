@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>物色 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="on">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>物色流转 · 一物之失得，一人之生死</h2>
+<div class="card small">
+二十四件器物各有其主：一根汗巾自蒋玉菡到宝玉再到袭人，一串念珠由北静王赐下、
+转赠黛玉而被掷还，一把鸳鸯剑先属湘莲终随三姐自刎。<b>横轴是回次</b>（一至八十为脂本，
+八十一至一百一十为本工程续写，以淡色标出），每一点是该物的一次现身：
+实心为脂本正文，空心为续写。点一点看原文与它的传承之链；
+点物名看它历任主人各自的下场。
+</div>
+<div class="card gcanvas">
+  <div class="gtools">
+    <span class="gstat" id="rstat"></span>
+  </div>
+  <svg id="rel" preserveAspectRatio="xMidYMin meet"></svg>
+</div>
+<div class="gwrap">
+  <div class="card small" id="rlegend"></div>
+  <aside class="card gside" id="rside"><p class="small">点一点看原文。</p></aside>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,SEL=null;
+
+function draw(){
+  const LS=D.lanes, LH=26, X0=150, X1=1044, TOP=34;
+  const W=1080, H=TOP+LS.length*LH+18;
+  $('rel').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const x=c=>X0+(Math.min(c,110)-1)*(X1-X0)/109;
+  let s=`<rect x=${X0} y=${TOP-16} width=${1044-X0} height=${LS.length*LH+8} fill="#fdf6ec" opacity=".5"/>`;
+  s+=`<rect x=${x(81)} y=${TOP-16} width=${1044-x(81)} height=${LS.length*LH+8} fill="#3b4a6b" opacity=".05"/>`;
+  s+=`<text x=${x(81)+6} y=${TOP-4} font-size=10.5 fill="#3b4a6b" font-family="serif">← 脂本前八十回 ｜ 续写三十回 →</text>`;
+  [1,10,20,30,40,50,60,70,80,90,100,110].forEach(c=>{
+    s+=`<line x1=${x(c)} y1=${TOP-12} x2=${x(c)} y2=${TOP+LS.length*LH} stroke="#e3d9c4"/>`;
+    s+=`<text x=${x(c)} y=${TOP-16} text-anchor="middle" font-size=10 fill="#8a7f6d" font-family="serif">${c}</text>`;});
+  LS.forEach((l,i)=>{
+    const y=TOP+i*LH+LH/2, col=D.colors[l.cat]||'#8a7f6d', on=SEL===l.name;
+    s+=`<text x=${X0-10} y=${y+4} text-anchor="end" font-size=${on?13:12.5} `
+      +`fill="${on?'#9e2b25':'#3a322a'}" font-family="serif" data-l="${esc(l.name)}" style="cursor:pointer">${esc(l.name)}</text>`;
+    s+=`<line x1=${X0} y1=${y} x2=${X1} y2=${y} stroke="#e9ddc7" stroke-opacity="${on?.9:.5}"/>`;
+    l.hits.forEach((h,j)=>{
+      const hx=x(h.ch), xu=h.src==='续';
+      s+=`<circle cx=${hx} cy=${y} r=${on?6:4.6} fill=${xu?'#fffdf8':col} `
+        +`stroke="${col}" stroke-width=${on?1.8:1.1} data-i="${i}.${j}" style="cursor:pointer">`
+        +`<title>${esc(l.name)}　第${h.ch}回（${xu?'续写':'脂本'}）</title></circle>`;
+    });
+    l.persons.forEach(p=>{
+      if(!p.last)return;
+      const px=x(Math.min(p.last,110));
+      s+=`<path d="M${px} ${y-9} L${px+4} ${y-14} L${px-4} ${y-14} Z" fill="#9e2b25" opacity=".5">`
+        +`<title>${esc(p.name)}：末见于第${p.last}回</title></path>`;
+    });
+    if(l.n_xu) s+=`<text x=${X1+4} y=${y+4} font-size=10.5 fill="#3b4a6b" font-family="serif">续 ${l.n_xu}</text>`;
+  });
+  $('rel').innerHTML=s;
+  $('rel').querySelectorAll('[data-i]').forEach(el=>el.onclick=()=>{
+    const [i,j]=el.dataset.i.split('.');SEL=D.lanes[+i].name;hit(D.lanes[+i],D.lanes[+i].hits[+j]);draw();});
+  $('rel').querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>{
+    const l=D.lanes.find(x=>x.name===el.dataset.l);SEL=l.name;obj(l);draw();});
+  $('rstat').textContent=`${D.stats.objects} 件器物 / ${D.stats.hits} 处现身 · `
+    +`续写中被接住 ${D.stats.xu.length} 件：${D.stats.xu.slice(0,6).join('、')}${D.stats.xu.length>6?'…':''}`;
+  $('rlegend').innerHTML='<div class="legend">'
+    +D.cats.map(c=>`<span><i style="background:${D.colors[c]||'#8a7f6d'}"></i>${esc(c)}</span>`).join('')
+    +'<span><i style="background:#9e2b25;border-radius:0"></i>▲ 主人末见于第几回</span></div>';
+}
+
+function hit(l,h){
+  let t=`<h3>${esc(l.name)}</h3><p class="small">第${h.ch}回<span class="tag${h.src==='续'?' red':''}">${h.src==='续'?'续写':'脂本'}</span>`
+    +`<span class="tag">${esc(l.cat)}</span></p><p>…${esc(h.ctx)}…</p>`;
+  t+=`<p class="small">转是这样转的：${esc(l.owner||'—')}</p>`;
+  if(l.symbol&&l.symbol!=='—') t+=`<p class="small">托意：${esc(l.symbol)}</p>`;
+  t+=l.persons.map(p=>`<div class="small">${esc(p.name)}：${esc(p.fate||p.role||'—')}`
+    +(p.last?`（末见第${p.last}回）`:'')+`</div>`).join('');
+  $('rside').innerHTML=t;
+}
+
+function obj(l){
+  let t=`<h3>${esc(l.name)}</h3><p class="small">${esc(l.cat)} · 现身 ${l.n} 处`
+    +`（脂本 ${l.n_main} ／ 续写 ${l.n_xu}）· 第${l.first}回起</p>`
+    +`<p>${esc(l.symbol||'')}</p><p class="small">传承：${esc(l.owner||'—')}</p>`
+    +l.hits.slice(0,10).map(h=>`<div style="border-bottom:1px dotted #e9ddc7;padding:2px 0">`
+      +`<span class="tag">第${h.ch}回</span><span class="tag">${h.src==='续'?'续写':'脂本'}</span>`
+      +`<br><span class="small">…${esc(h.ctx)}…</span></div>`).join('');
+  $('rside').innerHTML=t;
+}
+
+fetch('data/relics.json').then(r=>r.json()).then(d=>{D=d;draw();});
+</script></body></html>

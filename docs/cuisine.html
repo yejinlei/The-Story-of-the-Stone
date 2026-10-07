@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>食单 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="on">食单</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>食单与茶酒谱 · 由盛转淡的一桌饭</h2>
+<div class="card small">
+八类名物——茶汤、酒醴、粥饭、点心、荤鲜、补养膏饵、果品——逐回钩出每一次现身，
+连前后原文、在场说话者与节候一并录入。另以「摆饭、开宴、入席、酒席、摆酒、吃酒、
+斟酒、行令、赏月、赏桂花……」为宴席之辞，逐回点数。
+<b>须辩白一句</b>：宴席之辞的密度并不随回次衰减（每千字自 0.21 升至 0.49），
+真正退场的是<b>名物的种类</b>——由中段的 1.6 种／万字降到后段的 0.96，
+而集中度由 0.58 升到 0.67。桌子照旧摆着，摆来摆去却只剩那几样了。
+</div>
+<div class="grid" id="food-cards"></div>
+<h2>四段构成</h2>
+<div class="card"><svg id="segs" viewBox="0 0 1080 210"
+  preserveAspectRatio="xMidYMid meet"></svg></div>
+<div class="card"><table id="segtab"></table></div>
+<h2>宴席疏密</h2>
+<div class="card gcanvas">
+  <div class="gtools">
+    <button id="fDens" class="on">千字密度</button>
+    <button id="fAbs">绝对次数</button>
+    <span class="gstat" id="fstat"></span>
+  </div>
+  <svg id="feast" viewBox="0 0 1080 300" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<h2>名物</h2>
+<div class="card">
+  <div class="gtools" id="fcats"></div>
+  <div class="legend" id="flegend"></div>
+</div>
+<div class="gwrap">
+  <div class="card samples" id="flist"></div>
+  <aside class="card gside" id="fside"><p class="small">点一条看原文。</p></aside>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,CAT='全部',MODE='dens',SEL=null;
+
+function cards(){
+  const rows=[['录入名物',`${D.stats.kinds} 种`],['现身次数',`${D.stats.n} 处`],
+    ['涉回',`${D.stats.chaps} 回`],['宴席词总计',`${D.stats.feast} 次`],
+    ['名物最密回',`第 ${D.stats.foodmax} 回`],
+    ['宴席最密回',D.top.slice(0,3).map(t=>`第${t[0]}回（${t[1]}）`).join('　')]];
+  $('food-cards').innerHTML=rows.map(r=>
+    `<div class="card"><div class="small">${esc(r[0])}</div><big>${esc(r[1])}</big></div>`).join('');
+}
+
+function chart(){
+  const S=D.series.filter(s=>s.ch>0),W=1080,H=300,PL=44,PB=34;
+  const fk=MODE==='dens'?'food_d':'food', bk=MODE==='dens'?'feast_d':'feast';
+  const fm=Math.max(...S.map(s=>s[fk]),0.001), bm=Math.max(...S.map(s=>s[bk]),0.001);
+  const x=i=>PL+i*(W-PL-16)/(Math.max(1,S.length-1));
+  let s='';
+  [0,.5,1].forEach(f=>{const yy=16+(H-PB-16)*f;
+    s+=`<line x1=${PL} y1=${yy} x2=${W-16} y2=${yy} stroke="#e3d9c4"/>`;});
+  S.forEach((d,i)=>{const h=(d[bk]/bm)*(H-PB-24);
+    if(h<=0)return;
+    s+=`<rect x=${x(i)-3} y=${H-PB-h} width=6 height=${h} fill="#c2504a" opacity=".55"><title>第${d.ch}回：宴席词 ${d.feast}（${d.feast_d}/千字）</title></rect>`;});
+  let p='';
+  S.forEach((d,i)=>{p+=(p?'L':'M')+x(i)+' '+((H-PB)-(d[fk]/fm)*(H-PB-24));});
+  s+=`<path d="${p}" fill="none" stroke="#3f6b5e" stroke-width="1.4" opacity=".8"/>`;
+  [1,20,40,60,80].forEach(c=>{const i=S.findIndex(d=>d.ch===c); if(i<0)return;
+    s+=`<text x=${x(i)} y=${H-14} text-anchor="middle" font-size=10.5 fill="#8a7f6d" font-family="serif">${c}</text>`;});
+  [38,41,49,53,75].forEach(c=>{const i=S.findIndex(d=>d.ch===c); if(i<0)return;
+    const d=S[i],yy=(H-PB)-(d[fk]/fm)*(H-PB-24);
+    s+=`<circle cx=${x(i)} cy=${yy} r=3 fill="#9e2b25"/>`;
+    s+=`<text x=${x(i)} y=${yy-7} text-anchor="middle" font-size=10 fill="#9e2b25" font-family="serif">${c}回</text>`;});
+  $('feast').innerHTML=s;
+  $('fstat').textContent=MODE==='dens'?'每千字计（除回目长短之差）：红柱＝宴席词，绿线＝名物'
+    :'绝对次数：红柱＝宴席词，绿线＝名物';
+}
+
+function segs(){
+  const W=1080,H=210,PL=112,PB=26, rowH=(H-PB-14)/D.segs.length;
+  let s='';
+  D.segs.forEach((g,i)=>{
+    const tot=g.cats.reduce((a,c)=>a+c[1],0)||1, y=14+i*rowH;
+    s+=`<text x=${PL-10} y=${y+rowH/2} text-anchor="end" font-size=12 fill="#5d5449" font-family="serif">${esc(g.name)}</text>`;
+    let cx=PL;
+    g.cats.forEach(c=>{
+      if(!c[1])return;
+      const w=(c[1]/tot)*(W-PL-150);
+      const col=D.colors[c[0]]||'#8a7f6d';
+      s+=`<rect x=${cx} y=${y+6} width=${w} height=${rowH-20} fill="${col}" opacity=".72"><title>${esc(g.name)}　${esc(c[0])} ${c[1]} 处（${Math.round(c[1]/tot*100)}%）</title></rect>`;
+      if(w>34) s+=`<text x=${cx+w/2} y=${y+6+(rowH-20)/2+4} text-anchor="middle" font-size=10.5 fill="#fffdf8" font-family="serif">${esc(c[0])}</text>`;
+      cx+=w;
+    });
+    s+=`<text x=${W-140} y=${y+rowH/2} font-size=11 fill="#8a7f6d" font-family="serif">${g.kinds} 种 / ${g.n} 处　集中 ${g.conc}</text>`;
+  });
+  $('segs').innerHTML=s;
+  $('segtab').innerHTML=`<thead><tr><th>段落</th><th>处数</th><th>种类</th>`
+    +`<th>种类密度（种/万字）</th><th>前三名集中度</th><th>最常现身</th></tr></thead><tbody>`
+    +D.segs.map(g=>`<tr><td>${esc(g.name)}</td><td>${g.n}</td><td>${g.kinds}</td>`
+      +`<td>${g.density}</td><td>${g.conc}</td><td>${g.top.map(t=>esc(t[0])+'·'+t[1]).join('　')}</td></tr>`).join('')
+    +`</tbody>`;
+}
+
+function list(){
+  const items=(CAT==='全部'?D.items:D.items.filter(i=>i.cat===CAT));
+  $('flist').innerHTML=items.map(it=>{
+    const cookie=D.colors[it.cat]||'#8a7f6d';
+    return `<div><span class="tag" style="border-color:${cookie};color:${cookie}">${esc(it.cat)}</span>`
+      +`<b>${esc(it.name)}</b><span class="tag red">${it.n} 处</span>`
+      +`<span class="tag">第${it.chapters.slice(0,6).join('、')}回${it.chapters.length>6?'…':''}</span>`
+      +`<br><span class="small">${esc(it.hits[0].ctx)}</span></div>`;
+  }).join('');
+  $('flist').querySelectorAll('div').forEach((el,i)=>{el.style.cursor='pointer';el.onclick=()=>side(items[i]);});
+}
+
+function side(it){
+  SEL=it;
+  let h=`<h3>${esc(it.name)}</h3><p class="small">${esc(it.cat)} · 现身 ${it.n} 处 · `
+    +`第${it.chapters.join('、')}回</p>`;
+  h+=it.hits.slice(0,10).map(x=>`<div style="border-bottom:1px dotted #e9ddc7;padding:3px 0">`
+    +`<span class="tag">第${x.ch}回</span>${x.who?`<b>${esc(x.who)}</b>`:''}`
+    +(x.season?`<span class="tag">${esc(x.season)}</span>`:'')
+    +`<br><span class="small">…${esc(x.ctx)}…</span></div>`).join('');
+  $('fside').innerHTML=h;
+}
+
+fetch('data/cuisine.json').then(r=>r.json()).then(d=>{
+  D=d;cards();chart();segs();list();
+  $('fcats').innerHTML=['全部'].concat(D.cats.map(c=>c.name)).map(c=>
+    `<button class="${c===CAT?'on':''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $('fcats').querySelectorAll('button').forEach(b=>b.onclick=()=>{CAT=b.dataset.c;list();
+    $('fcats').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+  $('flegend').innerHTML=D.cats.map(c=>`<span><i style="background:${D.colors[c.name]}"></i>${esc(c.name)} ${c.kinds.length} 种 / ${c.n} 处</span>`).join('');
+  $('fDens').onclick=()=>{MODE='dens';$('fDens').classList.add('on');$('fAbs').classList.remove('on');chart();};
+  $('fAbs').onclick=()=>{MODE='abs';$('fAbs').classList.add('on');$('fDens').classList.remove('on');chart();};
+});
+</script></body></html>

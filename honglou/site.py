@@ -5,6 +5,12 @@
 index.html        总览：三恨、本体论规模、入口
 read.html         正文与脂批对照（按回切换，可按版本/批注类型过滤）
 entities.html     实体浏览：人物 / 地点 / 物件 / 概念 / 意象 / 典故
+tree.html         家族谱系：relations 拆做直系 / 配偶 / 房内 / 侍婢 / 旁系，
+                  铺成荣房、宁房、亲族外戚、太虚神话四卷世系树
+money.html        银钱账簿：逐回抽出每笔银钱，以「二十两＝庄家人一年」换算
+relics.html       物色流转：二十四件器物的传承之链与逐回现身
+calendar.html     岁时行事：十六桩节铺成十二月令，同一节令复沓由内而外
+cuisine.html      食单茶酒谱：八类名物逐回钩出，见招待由杂转而稀薄
 poems.html        诗词本体：体裁、作者、意象、谶应
 debate.html       多 Agent 推演全过程（含技术组的统计证据）
 continuation.html 续写正文 + 风格门禁 + 脂砚斋批点
@@ -26,8 +32,8 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import (annotators, climate, db, garden, graph, imagery,
-               mirror, paths, theme)
+from . import (annotators, calendar, climate, cuisine, db, garden, graph,
+               imagery, mirror, money, paths, relics, theme, tree)
 from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
@@ -404,6 +410,21 @@ def export_data() -> None:
     # --- 图谱（本体论七重视图，见 honglou/graph.py）
     graph.build(DATA)
 
+    # --- 物色流转（器物传承链与逐回现身，见 honglou/relics.py）
+    relics.build(DATA)
+
+    # --- 岁时行事（环形年历与节日复沓，见 honglou/calendar.py）
+    calendar.build(DATA)
+
+    # --- 食单与茶酒谱（名物逐回钩沉，见 honglou/cuisine.py）
+    cuisine.build(DATA)
+
+    # --- 家族谱系（四卷世系树，见 honglou/tree.py）
+    tree.build(DATA)
+
+    # --- 银钱账簿（每笔数目与物价锚换算，见 honglou/money.py）
+    money.build(DATA)
+
     # --- 字镜（字符三元组模型、逐回光谱、风格基准，见 honglou/mirror.py）
     mirror.build(DATA)
 
@@ -478,6 +499,26 @@ def build_site() -> Path:
 <a href="read.html">进入 →</a></div>
 <div class="card"><h3>本体实体</h3><p class="small">人物、居所、物件、概念、意象、典故、诗风画像。</p>
 <a href="entities.html">进入 →</a></div>
+<div class="card"><h3>银钱账簿</h3><p class="small">逐回抽出每一处写到数目的钱：
+<b>二十两＝庄家人一岁之用</b>（第三十九回螃蟹宴），而同一二十两在琏二爷房里只是三五天。
+附数目阶梯、荣府工资表与典当借贷的逐回疏密。</p>
+<a href="money.html">进入 →</a></div>
+<div class="card"><h3>物色流转</h3><p class="small">二十四件器物各有其主：
+汗巾自蒋玉菡而宝玉而袭人，念珠由北静王赐下、转赠黛玉而被掷还，鸳鸯剑先属湘莲终随三姐自刎。
+横轴一至一百一十回，实心为脂本、空心为续写，▲标出主人末见于第几回。</p>
+<a href="relics.html">进入 →</a></div>
+<div class="card"><h3>岁时行事</h3><p class="small">十五桩节铺成一圈十二月令：
+<b>元宵四见</b>（失女→归省→灯谜之谶→末次团圆）、<b>中秋两见</b>（起→衰音），
+同一节令的复沓沿半径由内而外叠出去，点一颗珠子看本事与其间的诗词。</p>
+<a href="calendar.html">进入 →</a></div>
+<div class="card"><h3>食单与茶酒谱</h3><p class="small">枫露茶、茄鲞、螃蟹宴、燕窝粥、茯苓霜……
+八类名物逐回钩出，附原文与在场者。实测：宴席之辞的密度并未衰减，
+真正退场的是<b>名物的种类</b>——由中段 1.6 种／万字降至后段 0.96。</p>
+<a href="cuisine.html">进入 →</a></div>
+<div class="card"><h3>家族谱系</h3><p class="small">一百二十九条关系拆作直系、配偶、
+房内、侍婢、旁系五类，铺成<b>荣房 / 宁房 / 亲族外戚 / 太虚神话</b>四卷世系树：
+一房一牌位，主位、配偶、妾侍各有所归，虚线是隔代提携、手足与姻娅。</p>
+<a href="tree.html">进入 →</a></div>
 <div class="card"><h3>诗词</h3><p class="small">判词、十二支曲、菊花诗、联句、灯谜、花签……含意象与韵基统计。</p>
 <a href="poems.html">进入 →</a></div>
 <div class="card"><h3>推演</h3><p class="small">多 Agent 立论、质证、裁决全过程，含技术组的统计证据。</p>
@@ -631,6 +672,28 @@ def build_site() -> Path:
             + (''.join(blocks) or '<p class="small">尚无推演记录。</p>'))
     (SITE / 'debate.html').write_text(
         _page('推演', body, 'debate.html'), encoding='utf-8')
+
+    # ---------- money（银钱账簿）
+    (SITE / 'money.html').write_text(
+        _page('银钱', money.BODY, 'money.html', money.JS), encoding='utf-8')
+
+    # ---------- relics（物色流转）
+    (SITE / 'relics.html').write_text(
+        _page('物色', relics.BODY, 'relics.html', relics.JS), encoding='utf-8')
+
+    # ---------- calendar（岁时行事）
+    (SITE / 'calendar.html').write_text(
+        _page('岁时', calendar.BODY, 'calendar.html', calendar.JS),
+        encoding='utf-8')
+
+    # ---------- cuisine（食单与茶酒谱）
+    (SITE / 'cuisine.html').write_text(
+        _page('食单', cuisine.BODY, 'cuisine.html', cuisine.JS),
+        encoding='utf-8')
+
+    # ---------- tree（家族谱系）
+    (SITE / 'tree.html').write_text(
+        _page('族谱', tree.BODY, 'tree.html', tree.JS), encoding='utf-8')
 
     # ---------- continuation
     conts = json.loads((DATA / 'continuations.json').read_text(encoding='utf-8'))

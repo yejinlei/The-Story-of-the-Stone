@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>族谱 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="on">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>家族谱系 · 宁荣两府与诸姻娅</h2>
+<div class="card small">
+relations 一百二十九条，先按语义拆作直系、配偶、房内、侍婢、旁系五类，再铺为树：
+<b>实线</b>为父之血胤，<b>虚线</b>为祖孙、手足、姻娅、友朋之情牵；
+牌位上第一行是主位（有血统者或其夫/妻），第二行＝配偶，微字行＝妾与侍婢。
+同一人若父母俱录，依父系只挂一处，另一处改虚线，以免一子两父、枝干交错。
+<b>虚框</b>为「推得」——贾珠早夭、巧姐父母之类，点开节点可见凭据。
+点牌位看档案，点档案里的人名可跳到他名下。
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="card gcanvas">
+  <div class="gtools">
+    <label><input type="checkbox" id="auxOn" checked> 显示旁系虚线</label>
+    <span class="gstat" id="stat"></span>
+  </div>
+  <svg id="tree" preserveAspectRatio="xMidYMin meet"></svg>
+</div>
+<div class="gwrap">
+  <aside class="card gside" id="side"><p class="small">点一枚牌位。</p></aside>
+  <div class="card small">图例：<span class="tag">实线 父·母</span>
+  <span class="tag">虚线 祖孙·手足·姻娅</span>
+  <span class="tag red">红点 正册</span><span class="tag">赭点 副册</span>
+  <span class="tag">淡赭点 又副册</span><span class="tag">金点 情榜之首</span>
+  <span class="tag">虚框 推得</span></div>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,T=null,SEL=null,HOV=null,IX=new Map();
+
+function tabOf(name){
+  for(const t of D.tabs){for(const n of t.nodes){
+    if(n.name===name||(n.members||[]).includes(name)||(n.home||[]).includes(name)
+       ||(n.maids||[]).includes(name)) return [t.key,n.id];}}
+  return null;
+}
+function nodes(){return (D.tabs.find(t=>t.key===T)||{nodes:[]}).nodes;}
+function byId(id){return nodes().find(n=>n.id===id);}
+
+function draw(){
+  const tab=D.tabs.find(t=>t.key===T)||{nodes:[],links:[]};
+  const svg=$('tree');
+  svg.setAttribute('viewBox',`0 0 ${tab.w+26} ${tab.h}`);
+  let s='';
+  for(const tr of (tab.trees||[])){
+    if(tab.trees.length>1)
+      s+=`<text x=6 y=${tr.oy-14} font-size=13 fill="#8a7f6d" font-family="serif">${esc(tr.caption)}一脉</text>`;
+  }
+  const rel=(a,b)=>tab.links.filter(l=>(l.a===a&&l.b===b)||(l.a===b&&l.b===a));
+  // 旁系虚线
+  if($('auxOn').checked){
+    for(const l of tab.links.filter(l=>l.kind!=='kin')){
+      const A=byId(l.a),B=byId(l.b); if(!A||!B)continue;
+      const on=SEL&&(SEL===l.a||SEL===l.b), dim=SEL&&!on;
+      const x1=(A.x+A.w/2)<(B.x+B.w/2)?A.x+A.w:A.x, y1=A.y+A.h/2;
+      const x2=(A.x+A.w/2)<(B.x+B.w/2)?B.x:B.x+B.w, y2=B.y+B.h/2;
+      const dx=Math.max(36,Math.abs(x2-x1)*0.42)*((x2>=x1)?1:-1);
+      s+=`<path d="M${x1} ${y1} C${x1+dx} ${y1},${x2-dx} ${y2},${x2} ${y2}" `
+        +`fill="none" stroke="${on?'#9e2b25':'#c2b498'}" stroke-width="${on?1.5:.9}" `
+        +`stroke-opacity="${dim?.10:on?.85:.5}"><title>${esc(l.detail)}</title></path>`;
+    }
+  }
+  // 直系
+  for(const l of tab.links.filter(l=>l.kind==='kin')){
+    const A=byId(l.a),B=byId(l.b); if(!A||!B)continue;
+    const on=SEL&&(SEL===l.a||SEL===l.b), dim=SEL&&!on;
+    const x1=A.x+A.w/2,y1=A.y+A.h,x2=B.x+B.w/2,y2=B.y,my=(y1+y2)/2;
+    s+=`<path d="M${x1} ${y1} L${x1} ${my} L${x2} ${my} L${x2} ${y2}" fill="none" `
+      +`stroke="${on?'#9e2b25':'#8f8368'}" stroke-width="${on?1.6:1}" `
+      +`stroke-opacity="${dim?.18:.72}"><title>${esc(l.detail)}</title></path>`;
+    s+=`<text x=${(x1+x2)/2} y=${my-4} text-anchor="middle" font-size="9.5" `
+      +`fill="#8a7f6d" opacity="${dim?.2:.62}" font-family="serif">${esc(l.label)}</text>`;
+  }
+  // 牌位
+  for(const n of nodes()){
+    const sel=SEL===n.id;
+    const bg=n.gender==='女'?'#fdf7f4':'#fffdf8';
+    const dot=(n.reg&&({'正册':'#9e2b25','副册':'#c2504a','又副册':'#cf8b86',
+      '情榜之首':'#b08d57'})[n.reg])||'';
+    s+=`<g data-id="${n.id}" style="cursor:pointer">`;
+    s+=`<rect x=${n.x} y=${n.y} width=${n.w} height=${n.h} rx=3 fill="${bg}" `
+      +`stroke="${sel?'#9e2b25':(n.derived?'#b7a98d':'#ddd2b8')}" `
+      +`stroke-width="${sel?1.9:1}"`
+      +(n.derived?' stroke-dasharray="5,3"':'')
+      +(sel?' filter="drop-shadow(0 2px 5px rgba(120,90,50,.18))"':'')+'/>';
+    if(dot) s+=`<circle cx=${n.x+n.w-7} cy=${n.y+7.5} r=3 fill="${dot}"/>`;
+    let y=n.y+8+15;
+    n.lines.forEach((l,i)=>{
+      if(i) y += n.lines[i-1].c==='nm'?21:(n.lines[i-1].c==='sp'?18:15);
+      const col=l.c==='nm'?'#2f2a25':(l.c==='sp'?'#6b5f52':'#9a8d78');
+      s+=`<text x=${n.x+12} y=${y} font-size=${l.s} fill="${col}" font-family="serif"`
+        +(l.c==='nm'?' font-weight="600"':'')+`>${esc(l.t)}</text>`;
+    });
+    s+=`<rect x=${n.x} y=${n.y} width=${n.w} height=${n.h} fill="transparent"/></g>`;
+  }
+  svg.innerHTML=s;
+  svg.querySelectorAll('[data-id]').forEach(g=>{
+    const id=g.dataset.id;
+    g.onclick=()=>{SEL=id;draw();panel(id);};
+    g.onmouseenter=()=>{HOV=id;};g.onmouseleave=()=>{HOV=null;};
+  });
+  const st=D.stats;
+  $('stat').textContent=`本卷 ${tab.nodes.length} 房 · 直系 ${tab.links.filter(l=>l.kind==='kin').length} 线 · 虚线 ${tab.links.filter(l=>l.kind!=='kin').length} 条 · 全书共 ${st.nodes} 房`;
+}
+
+function chip(nm){
+  const hit=tabOf(nm);
+  return `<span class="nb" data-go="${hit?hit[0]+'|'+hit[1]:''}">${esc(nm)}</span>`;
+}
+
+function panel(id){
+  const n=byId(id); if(!n)return;
+  const P=D.people[n.name]||{name:n.name};
+  let h=`<h3>${esc(n.name)}</h3>`;
+  h+=`<table class="kv"><tbody>`
+    +(P.gender?`<tr><td>性别</td><td>${esc(P.gender)}</td></tr>`:'')
+    +(P.role?`<tr><td>身份</td><td>${esc(P.role)}</td></tr>`:'')
+    +(P.res?`<tr><td>居所</td><td>${esc(P.res)}</td></tr>`:'')
+    +(P.reg?`<tr><td>册籍</td><td>${esc(P.reg)}</td></tr>`:'')
+    +(P.bang&&!P.bang.startsWith('（')?`<tr><td>情榜</td><td>${esc(P.bang)}</td></tr>`:'')
+    +(P.fate?`<tr><td>结局</td><td>${esc(P.fate)}</td></tr>`:'')
+    +(P.first!=null?`<tr><td>出场</td><td>第 ${P.first} 回起，至第 ${P.last} 回止；`
+      +`见 ${P.chaps} 回，提到 ${P.hits} 次</td></tr>`:'')
+    +`</tbody></table>`;
+  if(P.note) h+=`<p class="small">谱据：${esc(P.note)}</p>`;
+  const peers=(n.members||[]).filter(x=>x!==n.name);
+  if(peers.length) h+=`<p class="small">同房：${peers.map(chip).join('')}</p>`;
+  if((n.home||[]).length) h+=`<p class="small">妾：${n.home.map(chip).join('')}</p>`;
+  if((n.maids||[]).length) h+=`<p class="small">侍：${n.maids.map(chip).join('')}</p>`;
+  if((P.rels||[]).length)
+    h+=`<div class="small" style="margin-top:8px">关系：`
+      +P.rels.map(r=>`<span class="nb" data-go="${(tabOf(r[1])||['','']).join('|')}">`
+        +`${esc(r[0])} ${esc(r[1])}</span>`).join('')+`</div>`;
+  const side=$('side'); side.innerHTML=h;
+  side.querySelectorAll('[data-go]').forEach(el=>{
+    el.onclick=()=>{const [tk,nid]=el.dataset.go.split('|');
+      if(!nid)return; T=tk; SEL=nid; drawTabs(); draw(); panel(nid);};
+  });
+}
+
+function drawTabs(){
+  $('tabs').innerHTML=D.tabs.map(t=>
+    `<button class="${t.key===T?'on':''}" data-k="${t.key}">${esc(t.title)}</button>`).join('')
+    +D.tabs.filter(t=>t.key===T).map(t=>`<span class="tag">${esc(t.note)}</span>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{T=b.dataset.k;SEL=null;drawTabs();draw();$('side').innerHTML='<p class="small">点一枚牌位。</p>';};
+  });
+}
+
+fetch('data/tree.json').then(r=>r.json()).then(d=>{
+  D=d;T=D.tabs[0].key;drawTabs();draw();
+});
+</script></body></html>

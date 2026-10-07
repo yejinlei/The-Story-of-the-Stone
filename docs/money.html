@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>银钱 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="on">银钱</a><a href="cuisine.html" class="">食单</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>银钱账簿 · 二十两是庄家人的一年</h2>
+<div class="card small">
+把正文里每一处写到数目的钱捋出来：先看后接之字（「三两日」不是钱），
+再看前后有无银、赏、封、称、兑、欠、赎、价、月钱、分例等字样，两道闸门过尽者录入。
+<b>换算的锚</b>是书中唯一的内生基准——第三十九回刘姥姥说螃蟹那一宴
+「一共倒有二十多两银子……这一顿的钱够我们庄家人过一年了」，
+故<b>二十两＝庄家人一岁之用</b>；另据第七十二回，琏二爷一房连四个丫头的月钱
+「通共一二十两，还不够三五天的使用」，同一种银子在府里只是三五天。
+抽取的条目、数目阶梯与逐回流向皆在下方，点<code>账簿</code>里的标签可分类翻检。
+</div>
+<div class="grid" id="ledger-cards"></div>
+<h2>现金流 · 逐回计入</h2>
+<div class="card gcanvas">
+  <div class="gtools">
+    <button id="mAmount" class="on">金额（对数）</button>
+    <button id="mCount">提及次数</button>
+    <span class="gstat" id="mstat"></span>
+  </div>
+  <svg id="cash" viewBox="0 0 1080 300" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="gwrap">
+  <div class="card"><h3>数目阶梯</h3><table id="tiers"></table></div>
+  <div class="card"><h3>荣府工资表</h3>
+  <p class="small">月钱、月例、分例所在句抽出：数额、说话者与原文。</p>
+  <div id="wages" class="samples"></div></div>
+</div>
+<h2>入不敷出 · 典当借贷之辞的逐回疏密</h2>
+<div class="card small">若在第九、第十六、第五十三回，当铺与放帐只是当家经理的手法；
+到第六十九回「我把两个金项圈当了三百银子」、第七十二回「这会子竟接不上……
+至少还得三二千两银子」，便是另一副声口了。以下逐回点算当、典、赎、利钱、
+亏空、挪借诸辞的出现数，取最多者十二回。</div>
+<div class="card" id="decay"></div>
+<h2>账簿</h2>
+<div class="card">
+  <div class="gtools" id="filters"></div>
+  <div class="samples" id="list"></div>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,MODE='amount',TAG='全部';
+
+function cards(){
+  const a=D.anchors[0];
+  const rows=[
+    ['录入条目',`${D.stats.n} 笔 / 见 ${D.stats.chaps} 回`],
+    ['银两小计',`${D.stats.taels.toLocaleString()} 两`],
+    ['制钱小计',`${D.stats.cash} 吊`],
+    ['最大一笔',`${D.stats.max} 两`],
+    ['簿外之锚','二十两＝庄家人一岁'],
+    ['另一本账','一二十两＝琏二爷三五日'],
+    ['月例行数',`${D.stats.wages} 行`],
+    ['最大者',D.notable[0]?`${D.notable[0].taels} 两　第 ${D.notable[0].ch} 回`:'—'],
+  ];
+  $('ledger-cards').innerHTML=rows.map(r=>
+    `<div class="card"><div class="small">${esc(r[0])}</div><big>${esc(r[1])}</big></div>`).join('');
+}
+
+function chart(){
+  const S=D.series,W=1080,H=300,PL=44,PB=34;
+  const vals=S.map(s=>MODE==='amount'?Math.log10(s.taels+1):s.n);
+  const mx=Math.max(...vals,0.6), n=S.length;
+  const x=i=>PL+i*(W-PL-14)/(Math.max(1,n-1));
+  const y=v=>H-PB-(v/mx)*(H-PB-16);
+  let s='';
+  [0,.5,1].forEach(f=>{const yy=PB+(H-PB-16)*f;
+    s+=`<line x1=${PL} y1=${H-yy} x2=${W-14} y2=${H-yy} stroke="#e3d9c4"/>`;});
+  const bars=MODE==='amount';
+  S.forEach((d,i)=>{
+    const v=bars?Math.log10(d.taels+1):d.n, yy=y(v);
+    if(bars) s+=`<rect x=${x(i)-3} y=${yy} width=6 height=${H-PB-yy} fill="#9e2b25" opacity=".62"><title>第${d.ch}回：${d.taels} 两 / ${d.cash} 吊 / ${d.n} 处</title></rect>`;
+    else s+=`<path d="M${x(i)-3} ${yy} L${x(i)+3} ${yy}" stroke="#9e2b25" stroke-width="2"/>`;
+  });
+  if(!bars){let p='';S.forEach((d,i)=>{p+=(p?'L':'M')+x(i)+' '+y(Math.log10(d.taels+1));});
+    s+=`<path d="${p}" fill="none" stroke="#b08d57" stroke-width="1.2" opacity=".7"/>`;}
+  D.anchors.forEach(a=>{
+    const i=S.findIndex(d=>d.ch===a.ch); if(i<0)return;
+    s+=`<line x1=${x(i)} y1=8 x2=${x(i)} y2=${H-PB} stroke="#3b4a6b" stroke-dasharray="3,4"/>`;
+    s+=`<text x=${x(i)+4} y=20 font-size=10.5 fill="#3b4a6b" font-family="serif">${esc(a.ch)}回锚</text>`;});
+  [1,20,40,60,80].forEach(c=>{const i=S.findIndex(d=>d.ch===c); if(i<0)return;
+    s+=`<text x=${x(i)} y=${H-14} text-anchor="middle" font-size=10.5 fill="#8a7f6d" font-family="serif">${c}</text>`;});
+  s+=`<text x=${PL} y=14 font-size=11 fill="#8a7f6d" font-family="serif">${MODE==='amount'?'金额 log10(两)':'每回提及次数'}</text>`;
+  $('cash').innerHTML=s;
+  $('mstat').textContent=`${MODE==='amount'?'柱＝该回金额对数，金线＝对数曲线':'点＝该回提及次数'}　虚线为两处锚所在回`;
+}
+
+function tiers(){
+  $('tiers').innerHTML=`<thead><tr><th>量级</th><th>笔数</th><th>银两小计</th><th>最大</th></tr></thead><tbody>`
+    +D.tiers.map(t=>`<tr><td>${esc(t.name)}</td><td>${t.n}</td><td>${t.sum}</td><td>${esc(t.top)}</td></tr>`).join('')
+    +`</tbody>`;
+}
+
+function wages(){
+  $('wages').innerHTML=D.wages.map(w=>
+    `<div><b>${esc(w.who||'—')}</b>　<span class="tag">${esc(w.raw)}</span>`
+    +`<span class="tag">第${w.ch}回</span><br>${esc(w.ctx)}</div>`).join('');
+}
+
+function decay(){
+  const rows=D.decay.slice(0,12), mx=Math.max(...rows.map(r=>r.n),1);
+  $('decay').innerHTML=rows.map(r=>`<div style="display:flex;align-items:baseline;gap:8px">`
+    +`<span class="tag">第${r.ch}回</span>`
+    +`<span style="display:inline-block;height:9px;width:${Math.round(r.n/mx*260)}px;`
+    +`background:linear-gradient(90deg,#c2504a,#9e2b25);border-radius:2px"></span>`
+    +`<span class="small">${r.n} 处</span></div>`
+    +`<div class="small" style="margin:0 0 6px 52px;color:#6b6155">…${esc(r.ctx)}…</div>`).join('');
+}
+
+function filters(){
+  const tags=['全部'].concat(D.tags.map(t=>t[0]));
+  $('filters').innerHTML=tags.map(t=>
+    `<button class="${t===TAG?'on':''}" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+  $('filters').querySelectorAll('button').forEach(b=>b.onclick=()=>{TAG=b.dataset.t;filters();list();});
+}
+
+function list(){
+  const a=D.anchors[0];
+  const sel=(TAG==='全部'?D.entries:D.entries.filter(e=>e.tags.includes(TAG)))
+    .slice().sort((x,y)=>y.taels-x.taels).slice(0,140);
+  $('list').innerHTML=sel.map(e=>{
+    const yr=e.years>=1?`约 ${Math.round(e.years*10)/10} 个庄家人年`
+      :`约 ${Math.round(e.years*365)} 日嚼用`;
+    return `<div><span class="tag">第${e.ch}回</span>`
+      +`<span class="tag red">${esc(e.raw)}</span>`
+      +`<span class="tag">${esc(e.tags.join('/'))}</span>`
+      +(e.who?`<b>${esc(e.who)}</b>`:'')
+      +`　<span class="small">${esc(yr)}</span><br>${esc(e.ctx)}</div>`;
+  }).join('')||'<p class="small">无。</p>';
+}
+
+fetch('data/money.json').then(r=>r.json()).then(d=>{
+  D=d;cards();chart();tiers();wages();decay();filters();list();
+  $('mAmount').onclick=()=>{MODE='amount';$('mAmount').classList.add('on');$('mCount').classList.remove('on');chart();};
+  $('mCount').onclick=()=>{MODE='count';$('mCount').classList.add('on');$('mAmount').classList.remove('on');chart();};
+});
+</script></body></html>
