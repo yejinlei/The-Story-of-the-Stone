@@ -346,6 +346,87 @@ def write_book(start: int = 81, end: int = 110, resolution: str = '',
     return out
 
 
+ANNO_PROMPT = """你是脂砚斋。下面是后人续写的《石头记》第 {chapter} 回（{title}）。
+
+【正文】
+{text}
+
+请照脂批体例批点，只批此回，不得改写正文：
+一、夹批：从正文中挑 5-7 处，摘取原文（须与正文一字不差，8-22 字），
+   各给批语（15-40 字）。批语要点出笔法（草蛇灰线、一击两鸣、背面敷粉、
+   不写之写、特犯不犯、自注）或指出失着，语气如脂砚斋。
+二、回末总评：60-120 字，评本回得失，须点明与前八十回何处呼应。
+
+【输出格式】每行一条，夹批用两竖线分隔；最后一行以「总评：」开头。不要任何其它文字。
+原文摘句||批语
+...
+总评：……
+"""
+
+
+def annotate(chapter: int, force: bool = False) -> dict | None:
+    """为已写的一回出结构化脂批（夹批 + 回末总评），写入 notes。"""
+    rows = db.q('SELECT title, text, notes FROM continuations WHERE chapter = ?',
+                [chapter])
+    if not rows:
+        return None
+    r = rows[0]
+    notes = json.loads(r['notes'] or '{}')
+    if notes.get('annos') and not force:
+        return dict(chapter=chapter, skipped=True)
+    raw = agents.AGENTS['zhiyanzai'].speak(
+        ANNO_PROMPT.format(chapter=chapter, title=r['title'] or '',
+                           text=r['text'][:2200]),
+        temperature=0.8, tag=f'anno2-{chapter}')
+    annos, summary = [], ''
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith('总评'):
+            summary = line.split('：', 1)[-1].split(':', 1)[-1].strip()
+            continue
+        if re.search(r'[|｜]{2}', line):
+            q, n = (x.strip() for x in re.split(r'[|｜]{2}', line, 1))
+            q = re.sub(r'^[「『"\']+|[」』"\']+$', '', q).strip()
+            if not (4 <= len(q) <= 40):
+                continue
+            if q in r['text']:
+                annos.append(dict(quote=q, note=n))
+                continue
+            # 容错：忽略标点差异后再定位，回填正文原样片段
+            strip = lambda s: re.sub(r'[^一-鿿]', '', s)      # noqa: E731
+            t, qq = strip(r['text']), strip(q)
+            if qq and qq in t:
+                chars = re.findall(r'[一-鿿]', r['text'])
+                i = t.find(qq)
+                annos.append(dict(quote=''.join(chars[i:i + len(qq)]), note=n))
+            else:
+                # 摘句与正文不符（批者凭记忆引文）：保留原句，标注为拟批
+                annos.append(dict(quote=q, note=n, loose=True))
+    notes.update(annos=annos[:8],
+                 zhi_summary=summary or notes.get('zhi', ''))
+    g = notes.get('gate') if isinstance(notes.get('gate'), dict) else {}
+    db.add_continuation(chapter, r['title'], r['text'],
+                        g.get('distance', 0), json.dumps(notes, ensure_ascii=False))
+    return dict(chapter=chapter, annos=len(annos), summary=summary[:40])
+
+
+def annotate_all(start: int = 81, end: int = 110, force: bool = False,
+                 limit: int | None = None) -> list[dict]:
+    out, n = [], 0
+    for ch in range(start, end + 1):
+        res = annotate(ch, force=force)
+        if res:
+            out.append(res)
+            print(f'第{ch}回 夹批 {res.get("annos", 0)} 条', flush=True)
+            if not res.get('skipped'):
+                n += 1
+        if limit and n >= limit:
+            break
+    return out
+
+
 def recheck(start: int = 81, end: int = 110) -> list[dict]:
     """按当前判据重算已写各回的成稿与本体论结论（不重写正文）。"""
     st = load_state()

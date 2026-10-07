@@ -10,60 +10,383 @@
   <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
   <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="on">图谱</a></nav>
 </header>
-<main><h2>本体图谱</h2>
-<div class="card small">节点：人物（红）与居所（绿）；边：亲属 / 主仆 / 情缘 / 居所。
-力导向布局，可拖动页面缩放查看。</div>
-<div class="card" id="graph"></div></main>
+<main>
+<h2>本体图谱</h2>
+<div class="card small">
+七重视图，皆从本体论各表织出：<b>人物关系网</b>（129 条关系，分血缘·婚姻·主仆·情缘·社会·神话）、
+<b>家族·府邸·院落</b>（5 家族 · 46 地点 · 居者）、<b>意象谱</b>（49 类意象 × 诗人 × 同诗共现）、
+<b>器物·典故·概念</b>（24 物件 · 27 典故）、<b>册籍·判词·探佚</b>（判词曲子 × 脂批线索 × 骨架回次 × 续写落地）、
+<b>时序长卷</b>（1—110 回节令与推演大事）、<b>推演脉络</b>（113 条立论，按置信度大小）。
+拖拽节点、滚轮缩放、点选节点即见其本体记录与逐回分布；右栏「关联」可一路点下去。
+</div>
+<div id="tabs" class="tabs"></div>
+<div class="gwrap">
+  <div class="card gcanvas">
+    <div class="gtools">检索 <input id="q" placeholder="人名 / 意象 / 典故 / 回次…">
+      <button id="relayout">重排</button><button id="reset">复位</button>
+      <span class="gstat" id="gstat"></span></div>
+    <svg id="svg" viewBox="0 0 1040 660" preserveAspectRatio="xMidYMid meet"
+         xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <aside class="card gside" id="side"></aside>
+</div>
+</main>
 <footer>
   <span class="seal">脂本</span>
   <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
   <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
 </footer>
 <script>
-const el=document.getElementById('graph');
-let nodes=[],links=[],pos=[],vel=[];
-fetch('data/graph.json').then(r=>r.json()).then(g=>{
-  nodes=g.nodes;links=g.links;
-  const idx={};nodes.forEach((n,i)=>idx[n.id]=i);
-  links=links.filter(l=>idx[l.source]!==undefined&&idx[l.target]!==undefined);
-  pos=nodes.map(()=>({x:Math.random()*700+50,y:Math.random()*450+50}));
+const KIND_C={血缘:'#9e2b25',婚姻:'#b08d57',主仆:'#b0703c',情缘:'#c2504a',
+社会:'#3b4a6b',神话:'#7a5c8a',从属:'#8a7f6d',府邸:'#9e2b25',居所:'#3f6b5e',
+族:'#b08d57',用:'#8a7f6d',共现:'#c2504a',持有:'#b08d57',所涉:'#7a5c8a',
+系于:'#3f6b5e',判词:'#3b4a6b',骨架安排:'#9e2b25',续写落地:'#3f6b5e',
+节令:'#5c8a6a',大事:'#7a5c8a',立论:'#3b4a6b',发言:'#b0703c'};
+const W=1040,H=660;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const svgEl=$('svg');
+let V=[],cur=0,nodes=[],links=[],idx={},pos=[],vel=[],fx={},K={k:1,x:0,y:0},
+    sel=null,q='',alpha=1,raf=0,frame=0,dragNode=null,panning=null,regions=[],
+    hover=null,qFocus=null;
+
+fetch('data/graph.json').then(r=>r.json()).then(d=>{
+  V=d.views;
+  const t=$('tabs');
+  V.forEach((v,i)=>{const b=document.createElement('button');
+    b.textContent=v.name;b.onclick=()=>load(i);t.appendChild(b);});
+  load(0);
+});
+
+function load(i){
+  cur=i;sel=null;hover=null;qFocus=null;q='';$('q').value='';
+  document.querySelectorAll('#tabs button').forEach((b,j)=>b.className=(j===i?'on':''));
+  const v=V[i];
+  nodes=v.nodes.map(n=>Object.assign({},n));
+  const ids=new Set(nodes.map(n=>n.id));
+  links=v.links.filter(l=>ids.has(l.source)&&ids.has(l.target));
+  idx={};nodes.forEach((n,j)=>idx[n.id]=j);
+  const wmax=Math.max(1,...nodes.map(n=>n.w||1));
+  nodes.forEach(n=>{n.r=3.4+7.4*Math.sqrt((n.w||1)/wmax);});
+  K={k:1,x:0,y:0};
+  layout(v);
+  $('gstat').textContent=nodes.length+' 节点 · '+links.length+' 边';
+  intro();
+  simulate(v.layout!=='timeline');
+}
+
+function layout(v){
+  fx={};regions=[];
+  if(v.layout==='timeline'){
+    const lanes=[['推演时序',H*0.10],['节令',H*0.30],['后三十回',H*0.60],
+                 ['前八十回',H*0.78]];
+    pos=nodes.map(n=>{
+      const x=36+((n.x||1)-1)/109*(W-72);
+      let y=H*0.78;
+      for(const g of lanes){if(n.group===g[0])y=g[1];}
+      y+=(n.dy||0);
+      fx[n.id]=true;n.ax=x;n.ay=y;
+      return {x:x,y:y+(Math.random()-.5)*8};
+    });
+    const half={'推演时序':46,'节令':32};
+    regions=lanes.map(g=>({name:g[0],x0:14,y0:g[1]-(half[g[0]]||26),
+      x1:W-14,y1:g[1]+(half[g[0]]||26),
+      color:(nodes.find(n=>n.group===g[0])||{}).color||'#8a7f6d'}));
+    vel=nodes.map(()=>({x:0,y:0}));
+    return;
+  }
+  // 分区：按族群做「平方根马赛克」分块（行高列宽皆取 √size，形状匀称），区内再作力导向
+  const groups={};
+  nodes.forEach(n=>{(groups[n.group]=groups[n.group]||[]).push(n);});
+  const list=Object.entries(groups).sort((a,b)=>b[1].length-a[1].length);
+  mosaic(list,16,16,W-16,H-16);
+  pos=nodes.map(n=>{
+    const b=n.bx;
+    return {x:b.x0+18+Math.random()*Math.max(8,b.x1-b.x0-36),
+            y:b.y0+24+Math.random()*Math.max(8,b.y1-b.y0-40)};
+  });
   vel=nodes.map(()=>({x:0,y:0}));
-  const adj=nodes.map(()=>[]);
-  links.forEach(l=>{adj[idx[l.source]].push(idx[l.target]);adj[idx[l.target]].push(idx[l.source]);});
-  const deg=nodes.map((_,i)=>adj[i].length);
-  function step(){
+}
+
+function mosaic(list,x0,y0,x1,y1){
+  if(!list.length)return;
+  if(list.length===1){assignBox(list[0][1],list[0][0],{x0:x0,y0:y0,x1:x1,y1:y1});return;}
+  const wt=g=>Math.sqrt(g[1].length);
+  const rows=Math.max(1,Math.round(Math.sqrt(list.length)));
+  const buckets=Array.from({length:rows},()=>[]);
+  const sums=new Array(rows).fill(0);
+  list.forEach(g=>{let k=0;for(let i=1;i<rows;i++)if(sums[i]<sums[k]-1e-9)k=i;
+    buckets[k].push(g);sums[k]+=wt(g);});
+  const tsum=sums.reduce((a,b)=>a+b,0)||1;
+  let y=y0;
+  buckets.forEach((row,ri)=>{
+    if(!row.length)return;
+    const h=(y1-y0)*sums[ri]/tsum;
+    let x=x0;
+    const rsum=row.reduce((a,g)=>a+wt(g),0)||1;
+    row.forEach(g=>{
+      const w=(x1-x0)*wt(g)/rsum;
+      assignBox(g[1],g[0],{x0:x,y0:y,x1:x+w,y1:y+h});
+      x+=w;});
+    y+=h;});
+}
+
+function assignBox(g,name,R){
+  const col=(g[0]||{}).color||'#8a7f6d';
+  const w=Math.max(30,R.x1-R.x0),h=Math.max(30,R.y1-R.y0);
+  const reg={name:name,x0:R.x0,y0:R.y0,x1:R.x1,y1:R.y1,color:col,n:g.length,
+    cap:Math.max(3,Math.round(w*h/(h<70?11000:6200)))};
+  regions.push(reg);
+  g.forEach(n=>{n.bx=R;n.reg=reg;n.ax=(R.x0+R.x1)/2;n.ay=(R.y0+R.y1)/2;
+    n.rest=Math.max(24,Math.min(78,Math.sqrt(w*h)/7));});
+}
+
+function simulate(on){
+  cancelAnimationFrame(raf);alpha=1;frame=0;
+  if(!on){draw();return;}
+  const lim=nodes.length>150?260:420;
+  const tick=()=>{
+    frame++;
+    const k=Math.max(0.04,alpha);
     for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
       let dx=pos[j].x-pos[i].x,dy=pos[j].y-pos[i].y;
-      let d2=dx*dx+dy*dy||1,d=Math.sqrt(d2);
-      const rep=1200/d2;
-      vel[i].x-=rep*dx/d;vel[i].y-=rep*dy/d;
-      vel[j].x+=rep*dx/d;vel[j].y+=rep*dy/d;
+      let d2=dx*dx+dy*dy;if(d2<1)d2=1;
+      const d=Math.sqrt(d2);
+      const rep=(320+80*(nodes[i].r+nodes[j].r))/d2*3.2*k;
+      const ux=dx/d*rep,uy=dy/d*rep;
+      vel[i].x-=ux;vel[i].y-=uy;vel[j].x+=ux;vel[j].y+=uy;
     }
     links.forEach(l=>{
-      const a=idx[l.source],b=idx[l.target];
-      let dx=pos[b].x-pos[a].x,dy=pos[b].y-pos[a].y;
-      let d=Math.sqrt(dx*dx+dy*dy)||1;
-      const f=(d-70)*0.02;
-      vel[a].x+=f*dx/d;vel[a].y+=f*dy/d;
-      vel[b].x-=f*dx/d;vel[b].y-=f*dy/d;
+      const a=idx[l.source],b=idx[l.target];if(a==null||b==null)return;
+      const share=(l.kind==='共现'?0.45:1);
+      const same=nodes[a].bx&&nodes[b].bx&&nodes[a].bx===nodes[b].bx;
+      const base=same?Math.min(nodes[a].rest||70,nodes[b].rest||70)
+                     :Math.min(150,Math.max(nodes[a].rest||70,nodes[b].rest||70)+50);
+      const w=(l.kind==='共现'?base*1.25:base)+(nodes[a].r+nodes[b].r)*1.6;
+      const dx=pos[b].x-pos[a].x,dy=pos[b].y-pos[a].y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const f=(d-w)*(same?0.05:0.005)*share*k;
+      vel[a].x+=f*dx/d;vel[a].y+=f*dy/d;vel[b].x-=f*dx/d;vel[b].y-=f*dy/d;
     });
-    pos.forEach((p,i)=>{
-      vel[i].x*=0.85;vel[i].y*=0.85;
-      p.x+=Math.max(-8,Math.min(8,vel[i].x));
-      p.y+=Math.max(-8,Math.min(8,vel[i].y));
-      p.x=Math.max(20,Math.min(780,p.x));p.y=Math.max(20,Math.min(480,p.y));
+    nodes.forEach((n,i)=>{
+      if(fx[n.id])return;
+      const p=pos[i],u=vel[i];
+      u.x+=(n.ax-p.x)*0.014*k;u.y+=(n.ay-p.y)*0.016*k;
+      u.x*=0.72;u.y*=0.72;
+      p.x+=Math.max(-9,Math.min(9,u.x));
+      p.y+=Math.max(-9,Math.min(9,u.y));
+      if(n.bx){
+        p.x=Math.max(n.bx.x0+n.r+3,Math.min(n.bx.x1-n.r-3,p.x));
+        p.y=Math.max(n.bx.y0+16+n.r,Math.min(n.bx.y1-n.r-3,p.y));
+      }else{
+        p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));
+      }
     });
-    draw();requestAnimationFrame(step);
-  }
-  function draw(){
-    let s=`<svg width="800" height="500">`;
-    links.forEach(l=>{const a=pos[idx[l.source]],b=pos[idx[l.target]];
-      s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(158,43,37,.22)" stroke-width="0.6"/>`;});
-    nodes.forEach((n,i)=>{const p=pos[i];const r=3+Math.min(9,deg[i]*0.7);
-      s+=`<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${n.color||'#8b6914'}" opacity="0.8"/>`;
-      if(deg[i]>6)s+=`<text x="${p.x+6}" y="${p.y+4}" font-size="11" fill="#4a4438">${n.name}</text>`;});
-    s+='</svg>';el.innerHTML=s;
-  }
-  step();
+    draw();alpha*=0.985;
+    if(frame<lim)raf=requestAnimationFrame(tick);else raf=0;
+  };
+  raf=requestAnimationFrame(tick);
+}
+
+function draw(){
+  const v=V[cur],nb=new Set();
+  if(sel)links.forEach(l=>{if(l.source===sel)nb.add(l.target);if(l.target===sel)nb.add(l.source);});
+  const ql=q.trim(),hit=n=>!ql||n.name.includes(ql);
+  let s='<defs><marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6"'
+    +' markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9e2b25"'
+    +' opacity=".5"/></marker></defs><g transform="translate('+K.x.toFixed(1)+','
+    +K.y.toFixed(1)+') scale('+K.k.toFixed(3)+')">';
+  regions.forEach(r=>{
+    s+='<rect x="'+r.x0.toFixed(1)+'" y="'+r.y0.toFixed(1)+'" width="'
+      +(r.x1-r.x0).toFixed(1)+'" height="'+(r.y1-r.y0).toFixed(1)
+      +'" rx="4" fill="'+r.color+'" fill-opacity="0.05" stroke="'+r.color
+      +'" stroke-opacity="0.38" stroke-width="0.9"/>'
+      +'<rect x="'+(r.x0+4).toFixed(1)+'" y="'+(r.y0+3).toFixed(1)+'" width="'
+      +(r.name.length*11.5+(r.n?30:12)).toFixed(1)+'" height="15" rx="7" fill="'
+      +r.color+'" fill-opacity="0.14"/>'
+      +'<text x="'+(r.x0+11).toFixed(1)+'" y="'+(r.y0+14).toFixed(1)
+      +'" font-size="11" fill="'+r.color+'" fill-opacity="0.95">'
+      +esc(r.name)+(r.n?'　'+r.n:'')+'</text>';
+  });
+  links.forEach(l=>{
+    const a=pos[idx[l.source]],b=pos[idx[l.target]];if(!a||!b)return;
+    const touch=sel&&(l.source===sel||l.target===sel);
+    const op=sel?(touch?0.95:0.09):0.40;
+    const c=KIND_C[l.kind]||'#b9ad98';
+    s+='<line x1="'+a.x.toFixed(1)+'" y1="'+a.y.toFixed(1)+'" x2="'+b.x.toFixed(1)
+      +'" y2="'+b.y.toFixed(1)+'" stroke="'+c+'" stroke-opacity="'+op
+      +'" stroke-width="'+(touch?1.4:0.75)+'"'
+      +(v.directed?' marker-end="url(#arw)"':'')+'/>';
+  });
+  const placed=[];
+  const hitBox=(x,y,w,h)=>{
+    for(const b of placed){if(x<b.x2&&x+w>b.x1&&y<b.y2&&y+h>b.y1)return true;}
+    return false;};
+  const order=[...nodes.keys()].sort((i,j)=>nodes[j].r-nodes[i].r);
+  order.forEach(i=>{
+    const n=nodes[i],p=pos[i];
+    const dim=(ql&&!hit(n))?0.12:((sel&&n.id!==sel&&!nb.has(n.id))?0.25:1);
+    s+='<circle data-id="'+n.id+'" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)
+      +'" r="'+n.r.toFixed(1)+'" fill="'+(n.color||'#8a7f6d')+'" fill-opacity="'
+      +(0.85*dim).toFixed(2)+'" stroke="#fffdf7" stroke-width="0.9"/>';
+    if(n.id===sel)s+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'
+      +(n.r+4.5).toFixed(1)+'" fill="none" stroke="#9e2b25" stroke-width="1.3"/>';
+    else if(n.id===hover||(ql&&hit(n)&&ql))s+='<circle cx="'+p.x.toFixed(1)+'" cy="'
+      +p.y.toFixed(1)+'" r="'+(n.r+3.5).toFixed(1)
+      +'" fill="none" stroke="#b08d57" stroke-width="1"/>';
+  });
+  const used=new Map();
+  order.forEach(i=>{
+    const n=nodes[i],p=pos[i];
+    if(dimOf(n)<0.5&&n.id!==sel)return;
+    const force=n.id===sel||n.id===hover||n.id===qFocus;
+    if(!(n.label||force))return;
+    if(n.reg){
+      const c=used.get(n.reg)||0;
+      if(!force&&c>=(n.reg.cap||99))return;
+      used.set(n.reg,c+1);
+    }
+    const w=n.name.length*12+4,h=14;
+    const cand=[[p.x-w/2,p.y-n.r-h+2,p.x,p.y-n.r-4,'middle'],
+                [p.x-w/2,p.y+n.r+2,p.x,p.y+n.r+11,'middle'],
+                [p.x+n.r+3,p.y-h/2,p.x+n.r+3,p.y+4,'start'],
+                [p.x-n.r-3-w,p.y-h/2,p.x-n.r-3,p.y+4,'end']];
+    let pick=null;
+    for(const c of cand){
+      if(!hitBox(c[0],c[1],w,h)&&c[0]>2&&c[0]+w<W-2&&c[1]>2&&c[1]<H-2){pick=c;break;}
+    }
+    if(!pick){if(!force)return;pick=cand[0];}
+    placed.push({x1:pick[0],x2:pick[0]+w,y1:pick[1],y2:pick[1]+h});
+    s+='<text x="'+pick[2].toFixed(1)+'" y="'+pick[3].toFixed(1)
+      +'" font-size="12" text-anchor="'+pick[4]+'" fill="#3f3830" fill-opacity="'
+      +Math.max(0.35,dimOf(n))+'" style="paint-order:stroke;stroke:#fffdf7;'
+      +'stroke-width:2.6px">'+esc(n.name)+'</text>';
+  });
+  svgEl.innerHTML=s+'</g>';
+}
+
+function dimOf(n){
+  const ql=q.trim();
+  if(ql&&!n.name.includes(ql))return 0.12;
+  if(sel&&n.id!==sel&&!nbHas(sel,n.id))return 0.25;
+  return 1;
+}
+function nbHas(id,other){
+  for(const l of links){
+    if(l.source===id&&l.target===other)return true;
+    if(l.target===id&&l.source===other)return true;}
+  return false;
+}
+
+function nodeName(id){const j=idx[id];return j==null?id:(nodes[j].name||id);}
+
+function intro(){
+  const v=V[cur];
+  const tops=[...nodes].sort((a,b)=>(b.w||0)-(a.w||0)).slice(0,16);
+  $('side').innerHTML='<h3>'+esc(v.name)+'</h3><div class="small">'+v.hint+'</div>'
+    +'<div class="legend">'+v.legend.map(l=>'<span><i style="background:'+l.c
+      +'"></i>'+esc(l.t)+'</span>').join('')+'</div>'
+    +'<div class="small" style="margin-top:8px">要目（按分量）</div><div>'
+    +tops.map(n=>'<span class="nb" data-go="'+n.id+'">'+esc(n.name)+'</span>').join('')
+    +'</div>';
+  bindGo();
+}
+
+function sparkSvg(n){
+  const s=n.spark,upto=s.n||80,cw=Math.max(0.9,(252/upto)-0.45);
+  let bars='';
+  s.p.forEach(p=>{const hh=Math.max(1.5,24*Math.sqrt(p[1]/s.m));
+    bars+='<rect x="'+((p[0]-1)*252/upto).toFixed(1)+'" y="'+(26-hh).toFixed(1)
+      +'" width="'+cw.toFixed(2)+'" height="'+hh.toFixed(1)+'" fill="#9e2b25" opacity=".5"/>';});
+  let ticks='';
+  const step=upto>80?20:10;
+  for(let c=1;c<=upto;c+=step)ticks+='<text x="'+((c-1)*252/upto).toFixed(1)
+    +'" y="39" font-size="8.5" fill="#8a7f6d">'+c+'</text>';
+  return '<div class="small" style="margin-top:9px">'+esc(n.spark_label||'逐回分布')
+    +'</div><svg viewBox="0 0 252 42" style="width:100%;height:54px">'+bars
+    +'<line x1="0" y1="26" x2="252" y2="26" stroke="#e3d9c4"/>'+ticks+'</svg>';
+}
+
+function show(id){
+  const j=idx[id];if(j==null)return;
+  sel=id;
+  const n=nodes[j],ns=[];
+  links.forEach(l=>{if(l.source===id)ns.push(l.target);if(l.target===id)ns.push(l.source);});
+  const uniq=[...new Set(ns)];
+  let h='<h3>'+esc(n.name)+'</h3><div class="small">'+esc(n.group)
+    +' · 直连 '+uniq.length+' 处</div><table class="kv">'
+    +(n.info||[]).map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')
+    +'</table>';
+  if(n.spark)h+=sparkSvg(n);
+  if(n.lines&&n.lines.length)h+='<div class="samples">'
+    +n.lines.map(x=>'<div>'+esc(x)+'</div>').join('')+'</div>';
+  if(uniq.length)h+='<div class="small" style="margin-top:10px">关联</div><div>'
+    +uniq.slice(0,48).map(u=>'<span class="nb" data-go="'+u+'">'+esc(nodeName(u))
+      +'</span>').join('')+'</div>';
+  $('side').innerHTML=h;
+  bindGo();draw();
+}
+
+function bindGo(){
+  document.querySelectorAll('.nb[data-go]').forEach(e=>{
+    e.onclick=()=>{const id=e.getAttribute('data-go');
+      if(idx[id]==null)return;show(id);center(id);};});
+}
+
+function center(id){
+  const p=pos[idx[id]];if(!p)return;
+  const k=Math.max(K.k,0.95);
+  K.k=k;K.x=W/2-p.x*k;K.y=H/2-p.y*k;draw();
+}
+
+function toGraph(e){
+  const r=svgEl.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  return {x:(x-K.x)/K.k,y:(y-K.y)/K.k};
+}
+
+svgEl.addEventListener('mousedown',e=>{
+  const id=e.target.getAttribute&&e.target.getAttribute('data-id');
+  if(id){dragNode=id;return;}
+  panning={x:e.clientX,y:e.clientY,kx:K.x,ky:K.y};
 });
+window.addEventListener('mousemove',e=>{
+  if(dragNode){const j=idx[dragNode];if(j==null)return;
+    const g=toGraph(e);pos[j].x=g.x;pos[j].y=g.y;fx[dragNode]=true;draw();return;}
+  if(panning){const r=svgEl.getBoundingClientRect();
+    K.x=panning.kx+(e.clientX-panning.x)/r.width*W;
+    K.y=panning.ky+(e.clientY-panning.y)/r.height*H;draw();return;}
+  const id=e.target.getAttribute&&e.target.getAttribute('data-id');
+  if(id!==hover){hover=id||null;draw();}
+});
+window.addEventListener('mouseup',()=>{
+  if(dragNode){const j=idx[dragNode];if(j!=null&&pos[j])vel[j]={x:0,y:0};dragNode=null;}
+  panning=null;
+});
+svgEl.addEventListener('click',e=>{
+  const id=e.target.getAttribute&&e.target.getAttribute('data-id');
+  if(id)show(id);else{sel=null;intro();draw();}
+});
+svgEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=svgEl.getBoundingClientRect();
+  const mx=(e.clientX-r.left)/r.width*W,my=(e.clientY-r.top)/r.height*H;
+  const k2=Math.max(0.35,Math.min(4,K.k*(e.deltaY<0?1.12:0.9)));
+  K.x=mx-(mx-K.x)*k2/K.k;K.y=my-(my-K.y)*k2/K.k;K.k=k2;draw();
+},{passive:false});
+$('q').addEventListener('input',e=>{
+  q=e.target.value.trim();
+  const all=q?nodes.filter(n=>n.name.includes(q)):[];
+  qFocus=all.length?all[0].id:null;
+  draw();
+  if(!q)return;
+  const hits=all.slice(0,30);
+  $('side').innerHTML='<h3>检索「'+esc(q)+'」</h3><div class="small">命中 '
+    +hits.length+' 个节点，点选定位</div><div>'
+    +hits.map(n=>'<span class="nb" data-go="'+n.id+'">'+esc(n.name)+'</span>').join('')
+    +'</div>';
+  bindGo();
+});
+$('relayout').onclick=()=>{const v=V[cur];layout(v);simulate(v.layout!=='timeline');};
+$('reset').onclick=()=>{K={k:1,x:0,y:0};draw();};
 </script></body></html>

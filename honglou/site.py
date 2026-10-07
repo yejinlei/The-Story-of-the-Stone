@@ -19,7 +19,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import db, paths, theme
+from . import db, graph, paths, theme
 
 SITE = paths.SITE_DIR
 DATA = SITE / 'data'
@@ -80,55 +80,6 @@ window.onload=async()=>{
 };
 """
 
-JS_GRAPH = """
-const el=document.getElementById('graph');
-let nodes=[],links=[],pos=[],vel=[];
-fetch('data/graph.json').then(r=>r.json()).then(g=>{
-  nodes=g.nodes;links=g.links;
-  const idx={};nodes.forEach((n,i)=>idx[n.id]=i);
-  links=links.filter(l=>idx[l.source]!==undefined&&idx[l.target]!==undefined);
-  pos=nodes.map(()=>({x:Math.random()*700+50,y:Math.random()*450+50}));
-  vel=nodes.map(()=>({x:0,y:0}));
-  const adj=nodes.map(()=>[]);
-  links.forEach(l=>{adj[idx[l.source]].push(idx[l.target]);adj[idx[l.target]].push(idx[l.source]);});
-  const deg=nodes.map((_,i)=>adj[i].length);
-  function step(){
-    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
-      let dx=pos[j].x-pos[i].x,dy=pos[j].y-pos[i].y;
-      let d2=dx*dx+dy*dy||1,d=Math.sqrt(d2);
-      const rep=1200/d2;
-      vel[i].x-=rep*dx/d;vel[i].y-=rep*dy/d;
-      vel[j].x+=rep*dx/d;vel[j].y+=rep*dy/d;
-    }
-    links.forEach(l=>{
-      const a=idx[l.source],b=idx[l.target];
-      let dx=pos[b].x-pos[a].x,dy=pos[b].y-pos[a].y;
-      let d=Math.sqrt(dx*dx+dy*dy)||1;
-      const f=(d-70)*0.02;
-      vel[a].x+=f*dx/d;vel[a].y+=f*dy/d;
-      vel[b].x-=f*dx/d;vel[b].y-=f*dy/d;
-    });
-    pos.forEach((p,i)=>{
-      vel[i].x*=0.85;vel[i].y*=0.85;
-      p.x+=Math.max(-8,Math.min(8,vel[i].x));
-      p.y+=Math.max(-8,Math.min(8,vel[i].y));
-      p.x=Math.max(20,Math.min(780,p.x));p.y=Math.max(20,Math.min(480,p.y));
-    });
-    draw();requestAnimationFrame(step);
-  }
-  function draw(){
-    let s=`<svg width="800" height="500">`;
-    links.forEach(l=>{const a=pos[idx[l.source]],b=pos[idx[l.target]];
-      s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(158,43,37,.22)" stroke-width="0.6"/>`;});
-    nodes.forEach((n,i)=>{const p=pos[i];const r=3+Math.min(9,deg[i]*0.7);
-      s+=`<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${n.color||'#8b6914'}" opacity="0.8"/>`;
-      if(deg[i]>6)s+=`<text x="${p.x+6}" y="${p.y+4}" font-size="11" fill="#4a4438">${n.name}</text>`;});
-    s+='</svg>';el.innerHTML=s;
-  }
-  step();
-});
-"""
-
 JS_POEMS = """
 fetch('data/poems.json').then(r=>r.json()).then(ps=>{
   const box=document.getElementById('list');
@@ -156,12 +107,119 @@ def _page(title: str, body: str, active: str = '', extra_js: str = '') -> str:
     return theme.page(title, body, active, extra_js)
 
 
-def _paras(text: str) -> str:
-    """续写正文分段落（空行分段，单行则按句读断行）。"""
-    parts = [p.strip() for p in re.split(r'\n\s*\n', text.strip()) if p.strip()]
-    if len(parts) == 1:
-        parts = [p.strip() for p in re.split(r'\n', text.strip()) if p.strip()]
-    return ''.join(f'<p>{esc_html(p)}</p>' for p in parts)
+def _cjk(s: str) -> str:
+    return re.sub(r'[^一-鿿]', '', s or '')
+
+
+def _sent_spans(p: str) -> list[tuple[int, int]]:
+    """按句读切分，返回每句在段内的 [起, 止)。"""
+    spans, start = [], 0
+    for m in re.finditer(r'[。！？…；!?;]+[」』”"’）]*', p):
+        spans.append((start, m.end()))
+        start = m.end()
+    if start < len(p):
+        spans.append((start, len(p)))
+    return spans or [(0, len(p))]
+
+
+def _lcs(a: str, b: str) -> int:
+    """最长公共子串长度（摘句凭记忆略有出入时用）。"""
+    if not a or not b:
+        return 0
+    prev = [0] * (len(b) + 1)
+    best = 0
+    for ch in a:
+        cur = [0] * (len(b) + 1)
+        for j, c2 in enumerate(b, 1):
+            if ch == c2:
+                cur[j] = prev[j - 1] + 1
+                if cur[j] > best:
+                    best = cur[j]
+        prev = cur
+    return best
+
+
+def _anno_div(note: str, quote: str | None = None, fuzzy: bool = False) -> str:
+    """朱批：quote 为 None 表示已系于正文某句之后。"""
+    note = esc_html(note or '')
+    if quote is None:
+        tag = '脂砚斋夹批·摘句微异' if fuzzy else '脂砚斋夹批'
+        return f"<div class='anno 朱批'><span class='src'>{tag}</span>{note}</div>"
+    tail = '（摘句未见于此回正文，附于回末）' if quote else ''
+    head = f"「{esc_html(quote)}」{tail}" if quote else ''
+    return (f"<div class='anno 朱批'><span class='src'>拟批{head}</span>{note}</div>")
+
+
+def _chapter_html(text: str, annos: list[dict] | None = None) -> str:
+    """续写正文按句分段；夹批去标点定位后，就近系于所批之句之后。"""
+    paras = [p.strip() for p in re.split(r'\n\s*\n', (text or '').strip()) if p.strip()]
+    if len(paras) == 1:
+        paras = [p.strip() for p in re.split(r'\n', (text or '').strip()) if p.strip()]
+    if len(paras) > 1 and re.match(r'^第\s*[一二三四五六七八九十百零〇\d]+\s*回', paras[0]):
+        paras = paras[1:]                      # 回目已见标题，不再重复
+    if not paras:
+        return ''
+
+    # 净字索引 → (段序, 段内偏移)，使去标点后的摘句能回落到原串位置
+    net, back = [], []
+    for pi, p in enumerate(paras):
+        for ci, ch in enumerate(p):
+            if '一' <= ch <= '鿿':
+                net.append(ch)
+                back.append((pi, ci))
+    nett = ''.join(net)
+
+    spans = [_sent_spans(p) for p in paras]
+    hits: dict[tuple[int, int], list[tuple[str, bool]]] = {}
+    rest, cursor = [], {}
+    for a in annos or []:
+        q = _cjk(a.get('quote'))
+        note = a.get('note', '')
+        k, sent, fuzzy = -1, None, False
+        if q:
+            start = cursor.get(q, 0)           # 同句反复出现则顺次后移
+            k = nett.find(q, start)
+            if k < 0:
+                k = nett.find(q)
+            if k >= 0:
+                cursor[q] = k + 1
+                pi, ci = back[k + len(q) - 1]  # 落在该句之末字所归的那句
+                for si, (x, y) in enumerate(spans[pi]):
+                    if x <= ci < y:
+                        sent = (pi, si)
+                        break
+            else:                               # 批者凭记忆引文，按最长公共子串回收
+                need = max(4, int(len(q) * 0.6))
+                best, tgt = 0, None
+                for pi, p in enumerate(paras):
+                    for si, (x, y) in enumerate(spans[pi]):
+                        common = _lcs(q, _cjk(p[x:y]))
+                        if common > best:
+                            best, tgt = common, (pi, si)
+                if tgt and best >= need:
+                    sent, fuzzy = tgt, True
+        if sent is None:
+            rest.append(_anno_div(note, (a.get('quote') or '').strip()))
+        else:
+            hits.setdefault(sent, []).append((note, fuzzy))
+
+    out = []
+    for pi, p in enumerate(paras):
+        buf = ''
+        for si, (x, y) in enumerate(spans[pi]):
+            buf += p[x:y]
+            notes = hits.get((pi, si))
+            if not notes:
+                continue
+            out.append(f'<p>{esc_html(buf)}</p>')
+            buf = ''
+            out.extend(_anno_div(n, fuzzy=f) for n, f in notes)
+        if buf.strip():
+            out.append(f'<p>{esc_html(buf)}</p>')
+    if rest:
+        out.append("<p class='small'>以下批语未能系于正文，附于回末：</p>")
+        out.extend(rest)
+    return ''.join(out)
 
 
 def esc_html(s: str) -> str:
@@ -169,22 +227,37 @@ def esc_html(s: str) -> str:
 
 
 def _outline_html() -> str:
-    """全书骨架（后三十回回目清单）渲染成诗笺式表格。"""
+    """全书骨架（后三十回回目清单）：回目即锚点，点击直达续写正文。"""
     f = DATA / 'outline.json'
     if not f.exists():
         return ''
     doc = json.loads(f.read_text(encoding='utf-8'))
-    rows = ''.join(
-        f"<tr><td>{r['chapter']}</td><td style='font-family:var(--kai);"
-        f"font-size:15.5px'>{esc_html(r['title'])}</td>"
-        f"<td class='small'>{esc_html(r.get('brief', ''))}</td></tr>"
-        for r in doc['chapters'])
+    done = set()
+    cf = DATA / 'continuations.json'
+    if cf.exists():
+        done = {c['chapter'] for c in json.loads(cf.read_text(encoding='utf-8'))}
+    rows = []
+    for r in doc['chapters']:
+        ch = r['chapter']
+        title = esc_html(r['title'])
+        if ch in done:
+            cell = (f"<a href='#c{ch}' style='font-family:var(--kai);"
+                    f"font-size:15.5px'>{title}</a>"
+                    f"<span class='tag red' style='margin-left:6px'>已续</span>")
+        else:
+            cell = (f"<span style='font-family:var(--kai);font-size:15.5px;"
+                    f"color:var(--ink3)'>{title}</span>"
+                    f"<span class='tag' style='margin-left:6px'>待写</span>")
+        rows.append(f"<tr><td>{ch}</td><td>{cell}</td>"
+                    f"<td class='small'>{esc_html(r.get('brief', ''))}</td></tr>")
     res = esc_html((doc.get('resolution') or '')[:1200])
     return (f"<h2>全书骨架 · 后三十回</h2>"
             f"<div class='card small'>共 {doc.get('total', 110)} 回，"
             f"第 {doc.get('start', 81)} 回起为推演所得。"
-            f"回目由「曹雪芹」Agent 依诸家裁决拟定，知识图谱工程师查其约束违反。</div>"
-            f"<table><tr><th>回</th><th>回目</th><th>要点与伏线</th></tr>{rows}</table>"
+            f"回目由「曹雪芹」Agent 依诸家裁决拟定，知识图谱工程师查其约束违反。"
+            f"<b>点回目直达该回正文与脂批。</b></div>"
+            f"<table><tr><th>回</th><th>回目</th><th>要点与伏线</th></tr>"
+            f"{''.join(rows)}</table>"
             + (f"<div class='card'><h3>推演决议</h3><pre>{res}</pre></div>"
                if res else ''))
 
@@ -261,31 +334,8 @@ def export_data() -> None:
         (DATA / 'outline.json').write_text(
             of.read_text(encoding='utf-8'), encoding='utf-8')
 
-    # --- 图谱（人物关系 + 人物居所）
-    nodes, links, seen = [], [], set()
-
-    def add(nid, name, cat, color):
-        if nid in seen:
-            return
-        seen.add(nid)
-        nodes.append(dict(id=nid, name=name, cat=cat, color=color))
-
-    for r in db.q('SELECT source, rel, target FROM relations'):
-        a, b = f'P:{r["source"]}', f'P:{r["target"]}'
-        if not db.q('SELECT 1 FROM persons WHERE name=?', [r['source']]):
-            continue
-        add(a, r['source'], 'person', '#a03c3c')
-        add(b, r['target'], 'person', '#8b6914')
-        links.append(dict(source=a, target=b, rel=r['rel']))
-    for p in db.q('SELECT name, residence FROM persons'):
-        if p['residence'] and p['residence'] not in ('—', '（无固定居所）'):
-            rid = f'L:{p["residence"]}'
-            add(rid, p['residence'], 'place', '#3c5a3c')
-            add(f'P:{p["name"]}', p['name'], 'person', '#a03c3c')
-            links.append(dict(source=f'P:{p["name"]}', target=rid, rel='居'))
-    (DATA / 'graph.json').write_text(
-        json.dumps(dict(nodes=nodes, links=links), ensure_ascii=False),
-        encoding='utf-8')
+    # --- 图谱（本体论七重视图，见 honglou/graph.py）
+    graph.build(DATA)
 
     # --- 统计概览
     stats = dict(
@@ -351,7 +401,8 @@ def build_site() -> Path:
 <a href="debate.html">进入 →</a></div>
 <div class="card"><h3>续写</h3><p class="small">第八十一回以下，附风格门禁与脂砚斋批点。</p>
 <a href="continuation.html">进入 →</a></div>
-<div class="card"><h3>图谱</h3><p class="small">人物关系与居所的力导向图。</p>
+<div class="card"><h3>图谱</h3><p class="small">七重视图：人物关系、家族府邸、意象谱、
+器物典故、册籍判词探佚、时序长卷、推演脉络。点选即见本体记录与逐回分布。</p>
 <a href="graph.html">进入 →</a></div>
 </div>"""
     (SITE / 'index.html').write_text(
@@ -469,18 +520,25 @@ def build_site() -> Path:
         auto = '；'.join(notes.get('auto_fix') or [])
         act = notes.get('act') or '—'
         cls = 'tag red' if notes.get('failed') else 'tag'
+        annos = notes.get('annos') or []
+        summary = notes.get('zhi_summary') or notes.get('zhi') or ''
+        ch = c['chapter']
+        prev_l = (f"<a href='#c{ch - 1}'>上一回</a> · " if ch - 1 >= 81 else '')
+        next_l = (f" · <a href='#c{ch + 1}'>下一回</a>" if ch + 1 <= 110 else '')
         segs.append(f"""
-<h2>第 {c['chapter']} 回　{c['title'] or ''}</h2>
-<div class="card small"><span class="{cls}">{act} 段推演</span>
+<h2 id="c{ch}">第 {ch} 回　{c['title'] or ''}</h2>
+<div class="card small"><a href="#">↑ 回骨架</a> · {prev_l}
+<a href="read.html">前八十回正文·脂批</a>{next_l}<br>
+<span class="{cls}">{act} 段推演</span>
 <span class="tag">{'未过门禁' if notes.get('failed') else '已成稿'}</span>
 风格距离 <b>{c['style_score']}</b>（越小越近原笔） ·
 句长均值 {metrics.get('avg_sent_len')} · 对话率 {metrics.get('dialog_rate')} ·
 虚词率 {metrics.get('xuci_rate')} · 现代腔：{lint or '无'}</div>
 <div class="card small">本体论校验：{esc_html(gchk)}<br>
 接地提示：{esc_html(warn) or '无'}　自动禁例修正：{esc_html(auto) or '无'}</div>
-<div class="manuscript body-text">{_paras(c['text'])}</div>
+<div class="manuscript body-text">{_chapter_html(c['text'], annos)}</div>
 <div class="card"><h3>文体计量学家</h3><pre>{notes.get('review','')}</pre></div>
-<div class="card"><h3>脂砚斋批点</h3><pre>{notes.get('zhi','')}</pre></div>""")
+<div class="card"><h3>脂砚斋回末总评</h3><pre>{summary}</pre></div>""")
     outline_html = _outline_html()
     body = (outline_html +
             '<h2>续写</h2><div class="card small">续写由「曹雪芹」Agent 执笔，'
@@ -491,12 +549,8 @@ def build_site() -> Path:
         _page('续写', body, 'continuation.html'), encoding='utf-8')
 
     # ---------- graph
-    body = """<h2>本体图谱</h2>
-<div class="card small">节点：人物（红）与居所（绿）；边：亲属 / 主仆 / 情缘 / 居所。
-力导向布局，可拖动页面缩放查看。</div>
-<div class="card" id="graph"></div>"""
     (SITE / 'graph.html').write_text(
-        _page('图谱', body, 'graph.html', JS_GRAPH), encoding='utf-8')
+        _page('图谱', graph.BODY, 'graph.html', graph.JS), encoding='utf-8')
     return SITE
 
 

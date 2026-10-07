@@ -145,6 +145,8 @@ tbody tr:hover td{{background:rgba(226,205,172,.2)}}
   border:1px solid var(--line);border-radius:2px;padding:24px 28px;margin:14px 0;
   box-shadow:var(--shadow);font-size:17px;line-height:34px}}
 .manuscript p{{margin:0 0 4px;text-indent:2em}}
+.manuscript .anno{{margin:0 0 9px 2em;line-height:1.75;font-size:15px;
+  text-indent:0;max-width:46em}}
 
 /* ---------- 论辩 ---------- */
 .speech{{position:relative;border-left:3px solid var(--indigo);padding:10px 14px 10px 16px;
@@ -154,6 +156,41 @@ tbody tr:hover td{{background:rgba(226,205,172,.2)}}
 .speech:hover{{transform:translateX(2px)}}
 .speech .who{{font-weight:700;margin-right:8px;font-size:16px}}
 pre{{white-space:pre-wrap;font-family:var(--kai);font-size:14.5px;margin:6px 0 0}}
+
+/* ---------- 图谱 ---------- */
+.tabs{{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 10px;
+  border-bottom:1px solid rgba(158,43,37,.14);padding-bottom:10px}}
+.tabs button{{letter-spacing:.1em}}
+.gwrap{{display:grid;grid-template-columns:1fr 338px;gap:14px;align-items:start}}
+@media (max-width:960px){{.gwrap{{grid-template-columns:1fr}}}}
+.gcanvas{{padding:10px 12px 6px;margin:0}}
+.gcanvas svg{{display:block;width:100%;height:auto;touch-action:none;cursor:grab;
+  border-radius:2px;
+  background:
+    radial-gradient(420px 300px at 50% 46%,rgba(255,255,255,.8),rgba(255,255,255,0) 72%),
+    repeating-linear-gradient(180deg,transparent,transparent 27px,
+      rgba(59,74,107,.045) 27px,rgba(59,74,107,.045) 28px),
+    linear-gradient(180deg,#fffdf8,#fbf5e9)}}
+.gtools{{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px}}
+.gtools input{{width:190px}}
+.gside{{position:sticky;top:14px;max-height:84vh;overflow:auto;margin:0;
+  font-size:13.5px;padding:15px 17px}}
+.gside h3{{margin:0 0 4px;font-size:17px}}
+.gside .kv{{border:0;background:none;box-shadow:none;border-radius:0;margin:8px 0 0}}
+.gside .kv td{{border-bottom:1px dotted #e9ddc7;padding:3px 5px 3px 0;
+  background:none!important;font-size:13px}}
+.gside .kv td:first-child{{color:var(--ink3);white-space:nowrap;width:5.4em}}
+.legend{{display:flex;flex-wrap:wrap;gap:3px 13px;margin:8px 0 2px;font-size:12.5px;
+  color:var(--ink2)}}
+.legend i{{display:inline-block;width:9px;height:9px;border-radius:50%;
+  margin-right:5px;vertical-align:middle}}
+.nb{{display:inline-block;margin:2px 5px 2px 0;padding:1px 9px;font-size:12.5px;
+  border:1px solid var(--line);border-radius:11px;cursor:pointer;
+  background:linear-gradient(180deg,#fdf9f0,#f4ead8);color:var(--ink2)}}
+.nb:hover{{border-color:var(--cinnabar);color:var(--cinnabar)}}
+.samples{{font-family:var(--kai);font-size:13.5px;color:#4a4438;margin-top:8px}}
+.samples div{{border-bottom:1px dotted #e9ddc7;padding:3px 0}}
+.gstat{{font-size:12.5px;color:var(--ink3);margin-left:auto}}
 
 /* ---------- 控件 ---------- */
 button{{font-family:inherit;cursor:pointer;background:linear-gradient(180deg,#fffdf8,#f7f0e2);
