@@ -30,7 +30,7 @@ for d in (SITE, DATA, ASSET, DATA / 'chapters'):
 CSS = theme.CSS   # 视觉主题（宣纸·朱印·诗笺·手稿纸）见 honglou/theme.py
 
 JS_READ = """
-const state={chap:1,eds:new Set(),types:new Set(),onlyAnno:false};
+const state={chap:1,eds:new Set(),types:new Set(),onlyAnno:false,baihua:true};
 async function load(n){
   const r=await fetch(`data/chapters/${String(n).padStart(3,'0')}.json`);
   return r.json();
@@ -59,6 +59,16 @@ function render(d){
     }
     box.appendChild(p);
   });
+  if(state.baihua){
+    const v=(window.VN||{})[d.no]||(window.VN||{})[String(d.no)];
+    if(v&&v.text){
+      const w=document.createElement('div');w.className='card baihua';
+      w.innerHTML='<h3>白话文 · 本回故事</h3>'+
+        v.text.split(/\\n+/).map(x=>x.trim()).filter(Boolean)
+          .map(x=>`<p>${esc(x)}</p>`).join('');
+      box.appendChild(w);
+    }
+  }
   document.getElementById('title').textContent=`第${d.no}回　${d.title}`;
 }
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -77,28 +87,43 @@ window.onload=async()=>{
       b.classList.toggle('on');render(window.CUR);};});
   document.getElementById('onlyAnno').onchange=e=>{
     state.onlyAnno=e.target.checked;render(window.CUR);};
+  const bh=document.getElementById('baihuaOn');
+  bh.onchange=e=>{state.baihua=e.target.checked;render(window.CUR);};
+  fetch('data/vernacular.json').then(r=>r.json()).then(v=>{
+    window.VN=v;if(window.CUR)render(window.CUR);}).catch(()=>{});
 };
 """
 
 JS_POEMS = """
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 fetch('data/poems.json').then(r=>r.json()).then(ps=>{
-  const box=document.getElementById('list');
-  const genres=[...new Set(ps.map(p=>p.genre))].sort();
-  const gsel=document.getElementById('genre');
-  genres.forEach(g=>gsel.add(new Option(g,g)));
+  const box=document.getElementById('list'),gsel=document.getElementById('genre'),
+        asel=document.getElementById('author'),kw=document.getElementById('kw'),
+        cnt=document.getElementById('count');
+  [...new Set(ps.map(p=>p.genre))].sort().forEach(g=>gsel.add(new Option(g,g)));
+  const authors=[...new Set(ps.map(p=>(p.author||'').trim()).filter(Boolean))].sort();
+  authors.forEach(a=>asel.add(new Option(a,a)));
   function show(){
-    const g=gsel.value,k=document.getElementById('kw').value.trim();
-    box.innerHTML='';
-    ps.filter(p=>(!g||p.genre===g)&&(!k||p.text.includes(k)||(p.title||'').includes(k)))
-      .forEach(p=>{
-        const d=document.createElement('div');d.className='card';
-        d.innerHTML=`<h3>${p.title||'(无题)'}　<span class="small">${p.genre}·${p.author||'未详'}·第${p.chapter}回</span></h3>
-        <div class="poem">${p.lines.map(l=>l).join('｜')}</div>
-        <div class="small">意象：${(p.images||[]).join('、')||'—'}　句数 ${p.n_lines}　齐言 ${p.main_len}　韵基一致率 ${(p.rhyme||0).toFixed(2)}</div>`;
-        box.appendChild(d);
-      });
+    const g=gsel.value,a=asel.value,k=kw.value.trim();
+    const hit=ps.filter(p=>(!g||p.genre===g)&&(!a||(p.author||'').trim()===a)
+      &&(!k||(p.text||'').includes(k)||(p.title||'').includes(k)
+         ||(p.lines||[]).join('').includes(k)||(p.images||[]).some(x=>x.includes(k))));
+    cnt.textContent=`共 ${ps.length} 首，当前显示 ${hit.length} 首`;
+    box.innerHTML=hit.map(p=>{
+      const lines=(p.lines&&p.lines.length)?p.lines:[p.text||''];
+      const body=lines.map(l=>`<div>${esc(l)}</div>`).join('');
+      const img=(p.images||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join('');
+      const st=(p.voice||p.taboo)?`<div class="small">诗风画像：${esc(p.voice||'')}`
+        +(p.taboo?`　禁忌：${esc(p.taboo)}`:'')+`</div>`:'';
+      return `<div class="card"><h3>${esc(p.title||'(无题)')}　<span class="small">`
+        +`${esc(p.genre)}·${esc(p.author||'未详')}·第${p.chapter}回</span></h3>`
+        +`<div class="poem">${body}</div>`
+        +(img?`<div>意象：${img}</div>`:'')
+        +`<div class="small">句数 ${p.n_lines}　齐言 ${p.main_len}　`
+        +`韵基一致率 ${(p.rhyme||0).toFixed(2)}　虚词率 ${(p.xu||0).toFixed(2)}</div>${st}</div>`;
+    }).join('')||'<p class="small">没有符合条件的诗词。</p>';
   }
-  gsel.onchange=show;document.getElementById('kw').oninput=show;show();
+  gsel.onchange=show;asel.onchange=show;kw.oninput=show;show();
 });
 """
 
@@ -222,6 +247,15 @@ def _chapter_html(text: str, annos: list[dict] | None = None) -> str:
     return ''.join(out)
 
 
+def _baihua_card(v: dict | None) -> str:
+    """每回白话文串讲（供少年读者入门）。"""
+    if not v or not (v.get('text') or '').strip():
+        return ''
+    paras = ''.join(f"<p>{esc_html(x.strip())}</p>"
+                    for x in re.split(r'\n+', v['text']) if x.strip())
+    return f"<div class='card baihua'><h3>白话文 · 本回故事</h3>{paras}</div>"
+
+
 def esc_html(s: str) -> str:
     return (s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
 
@@ -306,9 +340,24 @@ def export_data() -> None:
     imgs = defaultdict(list)
     for r in db.q('SELECT poem_id, image FROM poem_images ORDER BY n DESC'):
         imgs[r['poem_id']].append(r['image'])
+    lines = defaultdict(list)
+    for r in db.q('SELECT poem_id, line FROM poem_lines ORDER BY poem_id, seq'):
+        lines[r['poem_id']].append(r['line'])
+    stylemap = {s['person']: s for s in db.q('SELECT * FROM poet_style')}
     poems = db.q('SELECT * FROM poems ORDER BY chapter, id')
     for p in poems:
         p['images'] = imgs.get(p['id'], [])[:8]
+        ls = lines.get(p['id']) or []
+        if not ls and p.get('main_len'):          # 兜底：按齐言字数切句
+            t = p['text'] or ''
+            n = p['main_len']
+            ls = [t[i:i + n] for i in range(0, len(t), n)]
+        p['lines'] = ls
+        st = stylemap.get((p['author'] or '').strip())
+        p['voice'] = st['voice'] if st else ''
+        p['taboo'] = st['taboo'] if st else ''
+        if not p.get('title'):
+            p['title'] = (ls[0][:14] + '…') if ls and len(ls[0]) > 14 else (ls[0] if ls else '')
     (DATA / 'poems.json').write_text(
         json.dumps(poems, ensure_ascii=False), encoding='utf-8')
 
@@ -327,6 +376,11 @@ def export_data() -> None:
     conts = db.q('SELECT * FROM continuations ORDER BY chapter')
     (DATA / 'continuations.json').write_text(
         json.dumps(conts, ensure_ascii=False), encoding='utf-8')
+
+    # --- 每回白话文串讲（供少年读者；缺失则站点照常生成）
+    vf = paths.data('vernacular.json')
+    (DATA / 'vernacular.json').write_text(
+        vf.read_text(encoding='utf-8') if vf.exists() else '{}', encoding='utf-8')
 
     # --- 全书骨架（后三十回回目清单）
     of = paths.data('outline.json')
@@ -420,7 +474,8 @@ def build_site() -> Path:
 回目：<select id="chap">{opts}</select>　
 版本：{eds}　
 <label><input type="checkbox" id="onlyAnno"> 只看批语</label>
-<span class="small">（朱红=朱批，墨绿=墨批；略字已还原为版本名与眉/侧/夹批）</span>
+<label><input type="checkbox" id="baihuaOn" checked> 附白话文</label>
+<span class="small">（朱红=朱批，墨绿=墨批；略字已还原为版本名与眉/侧/夹批；白话文为每回串讲，供少年读者入门）</span>
 </div>
 <div class="card body-text" id="content"></div>"""
     (SITE / 'read.html').write_text(
@@ -474,11 +529,31 @@ def build_site() -> Path:
         _page('本体实体', body, 'entities.html'), encoding='utf-8')
 
     # ---------- poems
-    body = """
+    poems_all = json.loads((DATA / 'poems.json').read_text(encoding='utf-8'))
+
+    def chips(pairs) -> str:
+        return ''.join(f"<span class='tag'>{esc_html(k)} {v}</span>"
+                       for k, v in pairs)
+
+    gcnt = Counter(p['genre'] for p in poems_all).most_common()
+    acnt = Counter((p['author'] or '').strip() or '未详（叙述者/集体）'
+                   for p in poems_all).most_common(16)
+    icnt = Counter(i for p in poems_all for i in (p['images'] or [])).most_common(14)
+    body = f"""
 <h2>诗词本体</h2>
+<div class="card small">脂本前八十回共录诗词曲赋 <b>{len(poems_all)}</b> 首
+（判词、红楼梦曲、灯谜、花签、联句、诔文一并收录）。
+下列分布可点：按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
+<div class="grid">
+<div class="card"><h3>体裁</h3>{chips(gcnt)}</div>
+<div class="card"><h3>作者</h3>{chips(acnt)}</div>
+<div class="card"><h3>高频意象</h3>{chips(icnt)}</div>
+</div>
 <div class="card small">体裁：
 <select id="genre"><option value="">全部</option></select>
-关键词：<input id="kw" placeholder="如 落花 / 判词 / 黛玉"></div>
+作者：<select id="author"><option value="">全部</option></select>
+关键词：<input id="kw" placeholder="如 落花 / 判词 / 黛玉">
+<span id="count" class="small"></span></div>
 <div id="list"></div>"""
     (SITE / 'poems.html').write_text(
         _page('诗词', body, 'poems.html', JS_POEMS), encoding='utf-8')
@@ -509,6 +584,7 @@ def build_site() -> Path:
 
     # ---------- continuation
     conts = json.loads((DATA / 'continuations.json').read_text(encoding='utf-8'))
+    vern = json.loads((DATA / 'vernacular.json').read_text(encoding='utf-8'))
     segs = []
     for c in conts:
         notes = json.loads(c['notes'] or '{}')
@@ -537,6 +613,7 @@ def build_site() -> Path:
 <div class="card small">本体论校验：{esc_html(gchk)}<br>
 接地提示：{esc_html(warn) or '无'}　自动禁例修正：{esc_html(auto) or '无'}</div>
 <div class="manuscript body-text">{_chapter_html(c['text'], annos)}</div>
+{_baihua_card(vern.get(str(ch)) or vern.get(ch))}
 <div class="card"><h3>文体计量学家</h3><pre>{notes.get('review','')}</pre></div>
 <div class="card"><h3>脂砚斋回末总评</h3><pre>{summary}</pre></div>""")
     outline_html = _outline_html()

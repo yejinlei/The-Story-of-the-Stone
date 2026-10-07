@@ -147,6 +147,11 @@ tbody tr:hover td{{background:rgba(226,205,172,.2)}}
 .manuscript p{{margin:0 0 4px;text-indent:2em}}
 .manuscript .anno{{margin:0 0 9px 2em;line-height:1.75;font-size:15px;
   text-indent:0;max-width:46em}}
+.baihua{{background:linear-gradient(180deg,#fbfaf4,#f7f4ea);
+  border-left:3px solid rgba(63,107,94,.5)}}
+.baihua h3{{font-family:var(--kai);color:var(--jade);margin:0 0 8px}}
+.baihua p{{margin:0 0 8px;line-height:1.95;font-size:15.5px;text-indent:2em}}
+.baihua p:last-child{{margin-bottom:0}}
 
 /* ---------- 论辩 ---------- */
 .speech{{position:relative;border-left:3px solid var(--indigo);padding:10px 14px 10px 16px;
