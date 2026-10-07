@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>大观园图 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="on">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>大观园图 · 空间即性格</h2>
+<div class="card small">
+四十六处地点按「大观园／荣宁二府／城外寺观／江南城邑／神话仙境」分区落点，
+院落大小＝它在前八十回正文中现身的次数（对数），色随类别。
+<b>点一处</b>即见：谁住在这里、现身于哪些回、写到它的诗句。
+一水为沁芳溪，自园西北贯芦雪庵、蜂腰桥、沁芳亭而入藕香榭——葬花、联句、烤鹿肉，皆在水边。
+</div>
+<div class="card gcanvas"><svg id="gd" viewBox="0 0 1120 720"
+  preserveAspectRatio="xMidYMid meet"></svg></div>
+<div class="gwrap">
+  <aside class="card gside" id="gside"><p class="small">点园中一处。</p></aside>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,SEL=null;
+
+function draw(){
+  const [W,H]=D.canvas;
+  let s='';
+  // 分区框
+  D.zones.forEach(z=>{
+    s+=`<rect x=${z.x} y=${z.y} width=${z.w} height=${z.h} rx=6 fill="none" stroke="${z.color}" stroke-opacity=".28" stroke-dasharray="6,5"/>`+
+       `<text x=${z.x+6} y=${z.y+18} fill="${z.color}" font-size="13" font-family="serif" opacity=".8">${esc(z.name)}</text>`;});
+  // 沁芳溪
+  const w=D.water.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  s+=`<path d="${w}" fill="none" stroke="#7fa3a8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".38"/>`+
+     `<text x=${D.water[2][0]-8} y=${D.water[2][1]-8} fill="#7fa3a8" font-size="11">沁芳溪</text>`;
+  // 点
+  D.nodes.forEach((n,i)=>{
+    const on=SEL&&SEL.name===n.name;
+    s+=`<circle cx=${n.x} cy=${n.y} r=${n.r} fill="${n.color}" fill-opacity="${on?.95:.7}" stroke="${on?'#9e2b25':'#fdf8ee'}" stroke-width="${on?2:1}" data-i="${i}" style="cursor:pointer">`+
+       `<title>${esc(n.name)}（${esc(n.cat)}）　现身 ${n.chapters} 回 / ${n.total} 次${n.residents.length?'　居者：'+esc(n.residents.map(r=>r.name).join('、')):''}</title></circle>`;
+    if(n.chapters>=4||n.residents.length){
+      s+=`<text x=${n.x} y=${n.y+n.r+13} text-anchor="middle" font-size="12" fill="${on?'#9e2b25':'#3a322a'}" font-family="serif" data-i="${i}" style="cursor:pointer">${esc(n.name)}</text>`;}
+  });
+  $('gd').innerHTML=s;
+  $('gd').querySelectorAll('[data-i]').forEach(el=>{
+    el.onclick=()=>{SEL=D.nodes[+el.dataset.i];draw();panel(SEL);};});
+}
+function spark(ev){
+  const m=Math.max(1,...ev.map(x=>x[1])),W=300,H=26;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">`+
+    ev.map(([c,n])=>{const x=(c-1)/110*W,h=Math.max(2,n/m*(H-4));
+      return `<rect x=${x.toFixed(1)} y=${(H-h).toFixed(1)} width="2.4" height=${h.toFixed(1)} fill="#9e2b25" opacity=".65"><title>第${c}回 ${n} 次</title></rect>`;}).join('')+
+    `</svg>`;
+}
+function panel(n){
+  const rs=n.residents.length?n.residents.map(r=>`<span class="tag red">${esc(r.name)}　${esc(r.role)}</span>`).join(''):'<span class="small">—（非常居之所）</span>';
+  const ps=n.poems.length?n.poems.map(p=>`<div class="small">「${esc(p.line)}」<br><span class="small">— ${esc(p.t)}　第${p.c}回${p.a?'　'+esc(p.a):''}</span></div>`).join(''):'<span class="small">—</span>';
+  const top=n.ev.slice().sort((a,b)=>b[1]-a[1]).slice(0,6).map(([c,k])=>`第${c}回(${k})`).join('、')||'—';
+  $('gside').innerHTML=`<h3>${esc(n.name)} <span class="small">${esc(n.cat)}</span></h3>`+
+    `<table class="kv"><tr><td>所属</td><td>${esc(n.belongs)}</td></tr>`+
+    `<tr><td>现身</td><td>${n.chapters} 回 · ${n.total} 次</td></tr>`+
+    `<tr><td>最密</td><td>${top}</td></tr></table>`+
+    `<p class="small">${esc(n.note)}</p><div><b>居者</b><br>${rs}</div>`+
+    `<div class="small" style="margin-top:8px">正文现身（回次 →）${spark(n.ev)}</div>`+
+    `<div style="margin-top:8px"><b>写到它的诗句</b><br>${ps}</div>`;
+}
+fetch('data/garden.json').then(r=>r.json()).then(d=>{D=d;draw();
+  const best=D.nodes.filter(n=>n.zone==='yuan').sort((a,b)=>b.total-a.total)[0];
+  if(best){SEL=best;draw();panel(best);}
+}).catch(e=>{$('gside').textContent='园图数据加载失败：'+e;});
+</script></body></html>

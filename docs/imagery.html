@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>意象星座 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="on">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>意象星座 · 竹与泪、花与冢、雪与茫茫</h2>
+<div class="card small">
+四十九类意象按类别分野布星：<b>星之大小</b>＝入诗处数与正文现身回数，
+<b>距心之远近</b>＝其疏密（密者居内），<b>细线</b>＝同一首诗词中并见（共现）。
+点一颗星，即见它的情感指向、语境、现身于哪些回，以及写到它的诗句。
+于是星座自成：竹—泪—潇湘一簇，花—冢—葬花一簇，雪—白—茫茫一簇。
+<label><input type="checkbox" id="lkOn" checked> 显示共现细线</label>
+</div>
+<div class="gwrap">
+  <div class="card gcanvas"><svg id="sky" viewBox="0 0 860 860"
+    preserveAspectRatio="xMidYMid meet"></svg></div>
+  <aside class="card gside" id="side"><p class="small">点一颗星。</p></aside>
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,SEL=null;
+
+function draw(){
+  const [W,H]=D.canvas,[cx,cy]=D.center;
+  let s='';
+  [80,170,260,350,430].forEach(r=>{s+=`<circle cx=${cx} cy=${cy} r=${r} fill="none" stroke="#e3d9c4" stroke-opacity=".55"/>`;});
+  D.cats.forEach((c,i)=>{const a=2*Math.PI*i/D.cats.length+Math.PI/D.cats.length;
+    const x=cx+400*Math.sin(a),y=cy-400*Math.cos(a);
+    s+=`<line x1=${cx} y1=${cy} x2=${x.toFixed(1)} y2=${y.toFixed(1)} stroke="#e3d9c4" stroke-dasharray="3,6"/>`;
+    s+=`<text x=${x.toFixed(1)} y=${y.toFixed(1)} text-anchor="middle" fill="${c.color}" font-size="15" font-family="serif" opacity=".85">${esc(c.name)}</text>`;});
+  if($('lkOn').checked){
+    const by={};D.stars.forEach(t=>by[t.name]=t);
+    D.links.forEach(l=>{const a=by[l.a],b=by[l.b];if(!a||!b)return;
+      s+=`<line x1=${a.x} y1=${a.y} x2=${b.x} y2=${b.y} stroke="#9e2b25" stroke-opacity="${Math.min(.28,0.06+l.n*0.04)}" stroke-width="${Math.min(1.6,0.5+l.n*0.2)}"/>`;});}
+  D.stars.forEach((t,i)=>{
+    const on=SEL&&SEL.name===t.name;
+    const gl=on?`<circle cx=${t.x} cy=${t.y} r=${t.r+7} fill="${t.color}" opacity=".18"/>`:'';
+    s+=gl+`<circle cx=${t.x} cy=${t.y} r=${t.r} fill="${t.color}" fill-opacity="${on?1:.82}" stroke="${on?'#9e2b25':'#fdf8ee'}" stroke-width="${on?2:.8}" data-i="${i}" style="cursor:pointer">`+
+      `<title>${esc(t.name)}　${esc(t.emotion)}　入诗 ${t.use} 处 / 现身 ${t.chapters} 回</title></circle>`+
+      ((t.r>5.5||on)?`<text x=${t.x} y=${t.y+t.r+11+(i%2)*9} text-anchor="middle" font-size="12" fill="${on?'#9e2b25':'#3a322a'}" font-family="serif" data-i="${i}" style="cursor:pointer">${esc(t.name)}</text>`:'');
+  });
+  $('sky').innerHTML=s;
+  $('sky').querySelectorAll('[data-i]').forEach(el=>{
+    el.onclick=()=>{SEL=D.stars[+el.dataset.i];draw();panel(SEL);};});
+}
+function spark(ev){
+  const m=Math.max(1,...ev.map(x=>x[1])),W=300,H=26;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">`+
+    ev.map(([c,n])=>{const x=(c-1)/80*W,h=Math.max(2,n/m*(H-4));
+      return `<rect x=${x.toFixed(1)} y=${(H-h).toFixed(1)} width="3" height=${h.toFixed(1)} fill="#9e2b25" opacity=".65"><title>第${c}回 ${n} 次</title></rect>`;}).join('')+`</svg>`;
+}
+function panel(t){
+  const ls=t.lines.length?t.lines.map(l=>`<div class="small">「${esc(l.line)}」<br><span class="small">— ${esc(l.t)}　第${l.c}回${l.a?'　'+esc(l.a):''}</span></div>`).join(''):'<span class="small">—</span>';
+  const T={冷:'#3b4a6b',温:'#9e2b25',中:'#8a7f6d'}[t.tone];
+  $('side').innerHTML=`<h3>${esc(t.name)} <span class="small" style="color:${T}">${t.tone}</span></h3>`+
+    `<table class="kv"><tr><td>类别</td><td><span style="color:${t.color}">${esc(t.cat)}</span></td></tr>`+
+    `<tr><td>情感</td><td>${esc(t.emotion)}</td></tr>`+
+    `<tr><td>入诗</td><td>${t.use} 处 · 正文现身 ${t.chapters} 回（${t.total} 次）</td></tr></table>`+
+    `<p class="small">${esc(t.context)}</p>`+
+    (t.poets.length?`<p class="small"><b>用它的人</b>：${t.poets.map(esc).join('、')}</p>`:'')+
+    `<div class="small">正文现身（回次 →）${spark(t.ev)}</div>`+
+    `<div style="margin-top:8px"><b>诗句</b><br>${ls}</div>`;
+}
+fetch('data/imagery.json').then(r=>r.json()).then(d=>{D=d;draw();
+  const best=D.stars.slice().sort((a,b)=>(b.use+b.chapters)-(a.use+a.chapters))[0];
+  if(best){SEL=best;draw();panel(best);}
+  $('lkOn').onchange=draw;
+}).catch(e=>{$('side').textContent='星座数据加载失败：'+e;});
+</script></body></html>

@@ -10,6 +10,11 @@ debate.html       多 Agent 推演全过程（含技术组的统计证据）
 continuation.html 续写正文 + 风格门禁 + 脂砚斋批点
 graph.html        本体图谱（自绘力导向图，无外部依赖）
 mirror.html       字镜：字符三元组模型，可拟笔、可辨体、可作全书光谱
+climate.html      冷暖谱：色彩字与情绪字逐回曲线，叠字镜困惑度
+garden.html       大观园图：空间本体铺成可游的园图
+clues.html        草蛇灰线：埋线 → 脂批点破 → 续写应验 三栏对账
+imagery.html      意象星座：四十九类意象的星野与共现
+annotators.html   批者群像：八本脂批的六维画像与版本亲缘
 
 数据全部由 DuckDB 导出为静态 JSON，浏览器不需要任何数据库。
 """
@@ -21,7 +26,9 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import db, graph, mirror, paths, theme
+from . import (annotators, climate, db, garden, graph, imagery,
+               mirror, paths, theme)
+from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
 DATA = SITE / 'data'
@@ -80,9 +87,13 @@ function toggle(set,v,btn){
 }
 function apply(){render(window.CUR);}
 window.onload=async()=>{
-  const d=await load(1);window.CUR=d;render(d);
+  let c0=1;const h=parseInt((location.hash||'').replace('#',''),10);
+  if(h>=1&&h<=110)c0=h;
+  const d=await load(c0);window.CUR=d;render(d);
+  document.getElementById('chap').value=c0;
   document.getElementById('chap').onchange=async e=>{
-    const d=await load(+e.target.value);window.CUR=d;render(d);};
+    const n=+e.target.value;location.hash='#'+n;
+    const d=await load(n);window.CUR=d;render(d);};
   document.querySelectorAll('[data-ed]').forEach(b=>{
     b.onclick=()=>{const v=b.dataset.ed;
       state.eds.has(v)?state.eds.delete(v):state.eds.add(v);
@@ -396,6 +407,19 @@ def export_data() -> None:
     # --- 字镜（字符三元组模型、逐回光谱、风格基准，见 honglou/mirror.py）
     mirror.build(DATA)
 
+    # --- 冷暖谱（逐回色彩字与情绪字，叠字镜困惑度，见 honglou/climate.py）
+    climate.build(DATA)
+
+    # --- 大观园图（空间本体铺成园图，见 honglou/garden.py）
+    garden.build(DATA)
+
+    # --- 草蛇灰线账本（埋线/点破/应验 三栏对账，见 honglou/clues.py）
+    ledger.build(DATA)
+
+    # --- 意象星座（见 honglou/imagery.py）与批者群像（见 honglou/annotators.py）
+    imagery.build(DATA)
+    annotators.build(DATA)
+
     # --- 统计概览
     stats = dict(
         chapters=db.q('SELECT COUNT(*) n FROM chapters WHERE chapter>0')[0]['n'],
@@ -467,6 +491,23 @@ def build_site() -> Path:
 可<b>拟笔</b>（马尔可夫接笔，仿其口气），可<b>辨体</b>（粘贴任意文本，算困惑度与四项风格指纹，
 并查出笔意最近的回），并有前八十回八折交叉校验的<b>全书光谱</b>。</p>
 <a href="mirror.html">进入 →</a></div>
+<div class="card"><h3>冷暖谱</h3><p class="small">逐回统计色彩字（红朱绛茜 ↔ 雪霜缟银冰）、
+情绪字（笑/泪/死丧/喜乐/空幻）与繁华字的密度，叠上字镜困惑度，
+看「悲凉之雾」自第几回起遍被华林。</p>
+<a href="climate.html">进入 →</a></div>
+<div class="card"><h3>大观园图</h3><p class="small">四十六处地点分区落点的可游园图：
+院落大小＝正文现身之数，点一处即见居者、现身回次与写到它的诗句。空间即性格。</p>
+<a href="garden.html">进入 →</a></div>
+<div class="card"><h3>草蛇灰线</h3><p class="small">伏线三栏对账：
+<b>埋线</b>（正文最早现身处）→ <b>点破</b>（脂批说破处）→ <b>应验</b>（续写接住处），
+未应者即续书之欠账。</p>
+<a href="clues.html">进入 →</a></div>
+<div class="card"><h3>意象星座</h3><p class="small">四十九类意象按类别分野布星，
+细线为同诗共现；竹—泪、花—冢、雪—茫茫，各自成簇。</p>
+<a href="imagery.html">进入 →</a></div>
+<div class="card"><h3>批者群像</h3><p class="small">甲戌、己卯、庚辰、戚序、蒙府、列藏、
+杨藏、甲辰八本批语的六维画像：悲悼、称赏、自道、洩后、篇幅、用力，并附版本亲缘。</p>
+<a href="annotators.html">进入 →</a></div>
 </div>"""
     (SITE / 'index.html').write_text(
         _page('总览', idx, 'index.html'), encoding='utf-8')
@@ -642,6 +683,27 @@ def build_site() -> Path:
     ver = hashlib.md5((DATA / 'mirror.json').read_bytes()).hexdigest()[:8]
     (SITE / 'mirror.html').write_text(
         _page('字镜', mirror.BODY, 'mirror.html', mirror.js(ver)), encoding='utf-8')
+
+    # ---------- climate（冷暖谱）
+    (SITE / 'climate.html').write_text(
+        _page('冷暖谱', climate.BODY, 'climate.html', climate.JS), encoding='utf-8')
+
+    # ---------- garden（大观园图）
+    (SITE / 'garden.html').write_text(
+        _page('大观园图', garden.BODY, 'garden.html', garden.JS), encoding='utf-8')
+
+    # ---------- clues（草蛇灰线账本）
+    (SITE / 'clues.html').write_text(
+        _page('草蛇灰线', ledger.BODY, 'clues.html', ledger.JS), encoding='utf-8')
+
+    # ---------- imagery（意象星座）
+    (SITE / 'imagery.html').write_text(
+        _page('意象星座', imagery.BODY, 'imagery.html', imagery.JS), encoding='utf-8')
+
+    # ---------- annotators（批者群像）
+    (SITE / 'annotators.html').write_text(
+        _page('批者群像', annotators.BODY, 'annotators.html', annotators.JS),
+        encoding='utf-8')
     return SITE
 
 

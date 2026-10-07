@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>草蛇灰线 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="on">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<h2>草蛇灰线 · 三栏对账</h2>
+<div class="card small">
+伏线之说向来只存乎感悟。此页把每条线拆成三件可查的事：
+<b>埋线</b>（脂本正文最早现身于第几回，摘录为证）、
+<b>点破</b>（脂批在哪一回说破，批语原文为证）、
+<b>应验</b>（本次续写第八十一回以下在哪一回接住，摘录为证）。
+三者俱全曰<b>已应</b>，有埋无应曰<b>未应</b>——未应者即续书之欠账。
+右栏以「人名或关键语在续书中重现」为准，摘录即其所在句；是否真算应了，点去那一回自判。
+点摘录即跳去读那一回（前八十回去「正文·脂批」，续书去「续写」）。
+</div>
+<div class="card"><div class="gtools">
+  <span id="stat" class="small"></span>
+  <button data-f="全部" class="on">全部</button>
+  <button data-f="已应">已应</button>
+  <button data-f="未应">未应</button>
+  <button data-f="判词">判词</button>
+  <button data-f="曲">十二支曲</button>
+  <button data-f="脂批线索">脂批线索</button>
+</div></div>
+<div id="list"></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,F='全部';
+const mark=s=>String(s||'').replace(/【/g,'<span class="tag red">').replace(/】/g,'</span>');
+function cell(t,c,snip){
+  if(!snip)return '<td class="small">—</td>';
+  const href=c<=80?('read.html#'+c):('continuation.html#c'+c);
+  return `<td><span class="small">第${c}回</span><br><a href="${href}">${mark(esc(snip))}</a></td>`;
+}
+function show(){
+  const es=D.entries.filter(e=>F==='全部'||e.status===F||e.kind===F);
+  $('list').innerHTML=es.map(e=>{
+    const ps=(e.persons||[]).map(p=>'<span class="tag">'+esc(p)+'</span>').join('');
+    const st=e.status==='已应'?'<span class="tag red">已应</span>':'<span class="tag">'+esc(e.status)+'</span>';
+    return `<div class="card"><h3>${esc(e.title)} <span class="small">${esc(e.kind)}　${esc(e.src||'')}</span> ${st}${ps}</h3>`+
+      (e.text?`<p class="small">${esc(e.text)}</p>`:'')+
+      (e.fate?`<p class="small">探佚结局：${esc(e.fate)}</p>`:'')+
+      `<table><tr><th>埋线（脂本正文）</th><th>点破（脂批）</th><th>应验（本次续写）</th></tr><tr>`+
+      cell('p',e.planted?e.planted.ch:0,e.planted?e.planted.snip:null)+
+      cell('a',e.anno?e.anno.ch:0,e.anno?e.anno.snip:null)+
+      cell('f',e.fulfilled?e.fulfilled.ch:0,e.fulfilled?e.fulfilled.snip:null)+
+      `</tr></table>`+
+      (e.n_ful?`<p class="small">此人在续书中现身于 ${e.n_ful} 回。</p>`:'')+
+      `<p class="small">出处：${esc(e.src||'')}</p></div>`;
+  }).join('')||'<p class="small">无</p>';
+  $('stat').textContent=`共 ${D.stats.total} 条　已应 ${D.stats.ok}　未应 ${D.stats.pending}　当前显示 ${es.length} 条`;
+}
+fetch('data/clues.json').then(r=>r.json()).then(d=>{D=d;show();
+  document.querySelectorAll('[data-f]').forEach(b=>{b.onclick=()=>{F=b.dataset.f;
+    document.querySelectorAll('[data-f]').forEach(x=>x.className=(x.dataset.f===F?'on':''));show();};});
+}).catch(e=>{$('list').textContent='账本数据加载失败：'+e;});
+</script></body></html>

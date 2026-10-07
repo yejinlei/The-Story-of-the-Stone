@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>批者群像 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="on">批者</a></nav>
+</header>
+<main>
+<h2>批者群像 · 八本脂批，各是一副心肠</h2>
+<div class="card small">
+甲戌、己卯、庚辰、戚序、蒙府、列藏、杨藏、甲辰八本批语，向以为一人之手，其实不然。
+按本统计批语之数、篇幅长短、批型好尚，以及四类语气的<b>每千字密度</b>：
+<b>悲悼</b>（哭泪泣悲痛伤叹）、<b>称赏</b>（奇妙趣隽神）、<b>自道</b>（余予我，以亲历者自居）、
+<b>洩后</b>（后文、末回、迷失、伏、谶——知后事而故作吞吐）。
+左为六维画像（篇幅＝平均字数，用力＝每回批语数），右为所点之本的细目。
+</div>
+<div class="gwrap">
+  <div class="card gcanvas"><svg id="rd" viewBox="0 0 440 420"
+    preserveAspectRatio="xMidYMid meet"></svg></div>
+  <aside class="card gside">
+    <div class="gtools"><span class="small">本　</span><span id="pick"></span></div>
+    <div id="info" class="small"></div>
+  </aside>
+</div>
+<div class="card"><h3>语气密度（每千字）</h3><div id="tbl"></div></div>
+<div class="card"><h3>批语随回次分布</h3>
+  <div class="gtools"><span class="small">叠放　</span><span id="cpick"></span></div>
+  <svg id="cv" viewBox="0 0 1080 260" preserveAspectRatio="xMidYMid meet"></svg></div>
+<div class="card"><h3>版本亲缘</h3><div class="small">同回、同批型、起首八字相同的批语，
+  若并为两本所载，则两本有缘。<b>对角＝该本独载之数，非对角＝与他本重合之数。</b>
+  此书体例「后出版本的批语与前面某本文字相同的，不再列出」，故非对角多为空——
+  <b>八本批语重合之少，本身即一发现</b>：可见汇校者已先行去重，今人所见各本之数即其独有之数。</div>
+  <div id="mx"></div></div>
+<div class="card"><h3>批语样例</h3><div id="samp"></div></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nf=(v,n)=>(Math.round(v*Math.pow(10,n))/Math.pow(10,n)).toFixed(n);
+let D=null,SEL=new Set(),CUR=null;
+
+function drawRadar(){
+  const R=140,cx=220,cy=210,n=D.axes.length;
+  const pt=(i,r)=>[cx+r*Math.sin(i/n*2*Math.PI),cy-r*Math.cos(i/n*2*Math.PI)];
+  let s='';
+  [0.5,1].forEach(f=>{s+='<polygon points="'+D.axes.map((_,i)=>pt(i,R*f).map(x=>Math.round(x)).join(',')).join(' ')+
+    '" fill="none" stroke="#e3d9c4"/>';});
+  for(let i=0;i<n;i++){const [x,y]=pt(i,R);
+    s+=`<line x1=${cx} y1=${cy} x2=${Math.round(x)} y2=${Math.round(y)} stroke="#e3d9c4"/>`;
+    const [lx,ly]=pt(i,R+24);
+    s+=`<text x=${Math.round(lx)} y=${Math.round(ly)} text-anchor="middle" fill="#5d5449" font-size="13" font-family="serif">${D.axes[i].name}</text>`;}
+  D.stats.forEach(st=>{
+    if(!st.n||!st.ax)return;
+    const on=SEL.has(st.name);
+    const pts=D.axes.map((a,i)=>pt(i,R*Math.max(.03,st.ax[a.key+'_r'])).map(x=>Math.round(x)).join(',')).join(' ');
+    s+=`<polygon points="${pts}" fill="${on?col(st.name):'none'}" fill-opacity="${on?.10:0}" stroke="${col(st.name)}" stroke-opacity="${on?.95:.22}" stroke-width="${on?2:1}"/>`;
+    if(on)D.axes.forEach((a,i)=>{const [x,y]=pt(i,R*Math.max(.03,st.ax[a.key+'_r']));
+      s+=`<circle cx=${Math.round(x)} cy=${Math.round(y)} r=2.6 fill="${col(st.name)}"/>`;});
+  });
+  $('rd').innerHTML=s;
+}
+const PAL={'甲戌':'#9e2b25','己卯':'#3b4a6b','庚辰':'#3f6b5e','戚序':'#b08d57',
+  '蒙府':'#6b5b95','列藏':'#c2504a','杨藏':'#7d1f1b','甲辰':'#8a7f6d'};
+const col=e=>PAL[e]||'#5d5449';
+
+function picks(){
+  $('pick').innerHTML=D.eds.map(e=>{const st=D.stats.find(x=>x.name===e)||{n:0};
+    return `<button data-e="${e}" style="border-color:${col(e)};color:${SEL.has(e)?col(e):'#8a7f6d'};opacity:${st.n?1:.4}" ${st.n?'':'disabled'}>${e} ${st.n}</button>`;}).join(' ');
+  $('pick').querySelectorAll('button').forEach(b=>{b.onclick=()=>{const e=b.dataset.e;
+    SEL.has(e)?SEL.delete(e):SEL.add(e);CUR=e;picks();drawRadar();info(CUR);curve();samp();};});
+  $('cpick').innerHTML=D.eds.map(e=>`<button data-c="${e}" style="border-color:${col(e)};color:${SEL.has(e)?col(e):'#8a7f6d'}">${e}</button>`).join(' ');
+  $('cpick').querySelectorAll('button').forEach(b=>{b.onclick=()=>{const e=b.dataset.c;
+    SEL.has(e)?SEL.delete(e):SEL.add(e);picks();drawRadar();curve();samp();};});
+}
+function info(e){
+  const st=D.stats.find(x=>x.name===e);
+  if(!st||!st.n){$('info').innerHTML='<p class="small">此本无批语入库。</p>';return;}
+  const ty=Object.entries(st.types||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="tag">${esc(k)} ${v}</span>`).join('');
+  $('info').innerHTML=`<h3>${esc(st.name)}</h3>`+
+    `<table class="kv"><tr><td>批语</td><td>${st.n} 条 · ${st.chars.toLocaleString()} 字</td></tr>`+
+    `<tr><td>平均</td><td>${st.avg} 字／条</td></tr>`+
+    `<tr><td>覆盖</td><td>${st.chapters} 回（每回 ${st.dens} 条）</td></tr></table>`+
+    `<div>批型　${ty}</div>`+
+    `<p class="small">悲悼 ${nf(st.den.sad,2)}　称赏 ${nf(st.den.praise,2)}　自道 ${nf(st.den.self,2)}　洩后 ${nf(st.den.future,2)}　（每千字）</p>`+
+    (st.n < 30 ? '<p class="small">此本存批甚少（' + st.n + ' 条），各项比例不足为据，聊备一格。</p>' : '');
+}
+function tbl(){
+  const rows=D.stats.filter(s=>s.n).map(st=>{
+    const bar=(v,mx,c)=>`<span style="display:inline-block;height:8px;width:${Math.max(1,Math.round(v/mx*70))}px;background:${c};margin-right:5px"></span>`;
+    const mxs=Math.max(...D.stats.filter(s=>s.n).map(s=>s.den.sad))||1;
+    const mxp=Math.max(...D.stats.filter(s=>s.n).map(s=>s.den.praise))||1;
+    const mxf=Math.max(...D.stats.filter(s=>s.n).map(s=>s.den.future))||1;
+    return `<tr><td><b style="color:${col(st.name)}">${esc(st.name)}</b></td>`+
+      `<td>${st.n}</td><td>${nf(st.avg,1)}</td>`+
+      `<td>${bar(st.den.sad,mxs,'#9e2b25')}${nf(st.den.sad,1)}</td>`+
+      `<td>${bar(st.den.praise,mxp,'#b08d57')}${nf(st.den.praise,1)}</td>`+
+      `<td>${bar(st.den.future,mxf,'#6b5b95')}${nf(st.den.future,1)}</td>`+
+      `<td>${nf(st.den.self,1)}</td></tr>`;}).join('');
+  $('tbl').innerHTML=`<table><tr><th>本</th><th>批语</th><th>均字</th><th>悲悼</th><th>称赏</th><th>洩后</th><th>自道</th></tr>${rows}</table>`;
+}
+function curve(){
+  const W=1080,H=260,PL=42,PR=14,PT=14,PB=34;
+  let mx=1;
+  D.stats.forEach(st=>{if(!st.n||!SEL.has(st.name))return;
+    st.curve.forEach(([c,n])=>{if(n>mx)mx=n;});});
+  const X=c=>PL+c/80*(W-PL-PR), Y=v=>H-PB-v/mx*(H-PT-PB);
+  let s='';
+  for(let f=0;f<=3;f++){const y=PT+(H-PT-PB)*f/3;
+    s+=`<line x1=${PL} y1=${y} x2=${W-PR} y2=${y} stroke="#e3d9c4"/>`+
+       `<text x=${PL-6} y=${y+4} text-anchor="end" fill="#8a7f6d" font-size="11">${Math.round(mx*(1-f/3))}</text>`;}
+  D.stats.forEach(st=>{if(!st.n||!SEL.has(st.name))return;
+    const d=st.curve.map(([c,n],i)=>(i?'L':'M')+X(c).toFixed(1)+' '+Y(n).toFixed(1)).join(' ');
+    s+=`<path d="${d}" fill="none" stroke="${col(st.name)}" stroke-width="1.6" opacity=".9"/>`;});
+  for(let c=10;c<=80;c+=10)s+=`<text x=${X(c)} y=${H-PB+16} text-anchor="middle" fill="#8a7f6d" font-size="11">${c}</text>`;
+  $('cv').innerHTML=s;
+}
+function mx(){
+  let m=Math.max(...[].concat(...D.matrix));
+  let s='<table><tr><th></th>'+D.eds.map(e=>`<th>${e}</th>`).join('')+'</tr>';
+  D.matrix.forEach((row,i)=>{
+    s+='<tr><th>'+D.eds[i]+'</th>'+row.map((v,j)=>{
+      const bg=i===j?`background:${col(D.eds[i])};color:#fff`:`background:rgba(158,43,37,${(v/m*0.75).toFixed(2)})`;
+      return `<td style="${bg};text-align:center">${v||''}</td>`;}).join('')+'</tr>';});
+  $('mx').innerHTML=s+'</table>';
+}
+function samp(){
+  const es=[...SEL];
+  $('samp').innerHTML=es.length?es.map(e=>{const st=D.stats.find(x=>x.name===e);
+    if(!st||!st.n)return '';
+    return `<div class="card"><h3 style="color:${col(e)}">${esc(e)}</h3>`+
+      (st.samples||[]).map(s=>`<p><span class="tag">第${s.ch}回·${esc(s.kind)}</span><br>${esc(s.text)}</p>`).join('')+
+      '</div>';}).join(''):'<p class="small">选一本。</p>';
+}
+fetch('data/annotators.json').then(r=>r.json()).then(d=>{
+  D=d;['庚辰','甲戌','戚序'].forEach(e=>{const st=D.stats.find(x=>x.name===e);if(st&&st.n)SEL.add(e);});
+  CUR='庚辰';picks();drawRadar();info(CUR);tbl();curve();mx();samp();
+}).catch(e=>{$('info').textContent='批者数据加载失败：'+e;});
+</script></body></html>

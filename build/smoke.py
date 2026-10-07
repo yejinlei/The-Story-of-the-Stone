@@ -15,9 +15,13 @@ threading.Thread(target=httpd.serve_forever, daemon=True).start()
 
 urls = ['index.html', 'read.html', 'entities.html', 'poems.html',
         'debate.html', 'continuation.html', 'graph.html', 'mirror.html',
+        'climate.html', 'garden.html', 'clues.html', 'imagery.html',
+        'annotators.html',
         'assets/app.css', 'data/poems.json', 'data/entities.json',
         'data/graph.json', 'data/debates.json', 'data/continuations.json',
         'data/mirror.json', 'data/stats.json',
+        'data/climate.json', 'data/garden.json', 'data/clues.json',
+        'data/imagery.json', 'data/annotators.json',
         'data/chapters/001.json', 'data/chapters/080.json']
 ok = True
 for u in urls:
