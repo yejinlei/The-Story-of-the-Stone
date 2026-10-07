@@ -102,6 +102,7 @@ AI 代笔之后，脂砚斋照旧夹批——它也会骂：「错矣！麒麟�
 pip install -r requirements.txt
 
 # 1) 由 PDF 建库（需自备《红楼梦脂评汇校本》PDF 置于项目根，不入仓）
+#    仓库已附构建好的 data/honglou.duckdb（24 张表、约 14.8 MB），可直接查询，无需重建
 python -m honglou.db build
 
 # 2) 生成静态站到 docs/

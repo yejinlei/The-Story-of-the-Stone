@@ -14,8 +14,8 @@ dist/
 # 本地依赖（--target 安装，不入仓）
 .pylibs/
 
-# 构建期数据库（可由 PDF 一键重建，不必入仓）
-data/*.duckdb
+# 构建期数据库：主库入仓（14.8 MB，便于他人直接查询，不必从 PDF 重建）
+# 仅 WAL 为运行时临时文件，忽略
 data/*.duckdb.wal
 
 # 中间产物（可从 PDF 重建）
