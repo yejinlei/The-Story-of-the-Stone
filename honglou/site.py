@@ -35,7 +35,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from . import (annotators, calendar, climate, costume, cuisine, db, garden,
-               graph, imagery, mirror, money, paths, relics, theme, tree)
+               graph, imagery, mirror, money, paths, relics, theme, tree,
+               versions)
 from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
@@ -424,6 +425,9 @@ def export_data() -> None:
     # --- 衣冠谱（成衣/首服/足衣/佩饰/雨具与服色考究，见 honglou/costume.py）
     costume.build(DATA)
 
+    # --- 版本谱（程高本与脂本诸 Differences，见 honglou/versions.py）
+    versions.build(DATA)
+
     # --- 家族谱系（四卷世系树，见 honglou/tree.py）
     tree.build(DATA)
 
@@ -524,6 +528,11 @@ def build_site() -> Path:
 第四十九回雪地群像<b>一人一件衣裳</b>，脂批一句「只一斗篷，写得前后照耀生色」点破机关；
 另有服色考（色字须落在衣边才算数）、逐回疏密，以及一张<b>续写待接之衣</b>的账单。</p>
 <a href="costume.html">进入 →</a></div>
+<div class="card"><h3>版本谱</h3><p class="small">两份谱系六份见证本：
+脂评本、甲戌本与本地汇校本止于第八十回，程甲、程乙本有一百二十回。
+回目对勘、篇幅增删、Delta 作者距离、三元组交叉熵、体裁指纹、显著字与人物消长——
+<b>第八十回处那道断层，逐回皆可复算</b>；另附诸本脂批分布与底本校勘记。</p>
+<a href="versions.html">进入 →</a></div>
 <div class="card"><h3>家族谱系</h3><p class="small">一百二十九条关系拆作直系、配偶、
 房内、侍婢、旁系五类，铺成<b>荣房 / 宁房 / 亲族外戚 / 太虚神话</b>四卷世系树：
 一房一牌位，主位、配偶、妾侍各有所归，虚线是隔代提携、手足与姻娅。</p>
@@ -711,6 +720,11 @@ def build_site() -> Path:
         '<div class="grid" id="cos-cards"></div>')
     (SITE / 'costume.html').write_text(
         _page('衣冠', cos_body, 'costume.html', costume.JS), encoding='utf-8')
+
+    # ---------- versions（版本谱）
+    (SITE / 'versions.html').write_text(
+        _page('版本谱', versions.BODY, 'versions.html', versions.JS),
+        encoding='utf-8')
 
     # ---------- tree（家族谱系）
     (SITE / 'tree.html').write_text(

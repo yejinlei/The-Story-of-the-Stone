@@ -1,0 +1,42 @@
+{
+ "jiaxu": {
+  "source": "zh.wikisource.org",
+  "titles": [
+   "脂硯齋重評石頭記甲戌本/第一回",
+   "脂硯齋重評石頭記甲戌本/第二十八回"
+  ],
+  "chapters": 16,
+  "sha256": "02288207a04d2221b4b46da5dc248034b768933857b661f7105ef2368fecbe9e",
+  "fetched": "2026-10-08"
+ },
+ "zhiqi": {
+  "source": "zh.wikisource.org",
+  "titles": [
+   "脂硯齋重評石頭記/第一回",
+   "脂硯齋重評石頭記/第八十回"
+  ],
+  "chapters": 80,
+  "sha256": "5969b057441e25df7219f6ad4b1af3fd5c09a816110007d01c773a403fd0a25a",
+  "fetched": "2026-10-08"
+ },
+ "chengyi": {
+  "source": "zh.wikisource.org",
+  "titles": [
+   "",
+   ""
+  ],
+  "chapters": 120,
+  "sha256": "569ad15ba39c280bf5d56d7c686f38fd95f14ebb831f948b7d7352b1c01eedb2",
+  "fetched": "2026-10-08"
+ },
+ "chengjia": {
+  "source": "zh.wikisource.org",
+  "titles": [
+   "紅樓夢（程甲本）/一",
+   "紅樓夢（程甲本）/一百二十"
+  ],
+  "chapters": 120,
+  "sha256": "3c0e00588873d140e8a38bab8ffd00e942c047b9e4eaea9c39769524752f31a9",
+  "fetched": "2026-10-08"
+ }
+}

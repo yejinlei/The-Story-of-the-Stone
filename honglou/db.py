@@ -97,6 +97,13 @@ CREATE TABLE IF NOT EXISTS festivals(id INTEGER, chapter VARCHAR,
 CREATE TABLE IF NOT EXISTS lost_clues(id INTEGER, clue VARCHAR,
     source VARCHAR, meaning VARCHAR);
 
+CREATE TABLE IF NOT EXISTS editions(name VARCHAR PRIMARY KEY, short VARCHAR,
+    family VARCHAR, year VARCHAR, extant VARCHAR, anno VARCHAR, note VARCHAR);
+
+CREATE TABLE IF NOT EXISTS variants(id INTEGER, chapter VARCHAR,
+    category VARCHAR, lemma VARCHAR, reading_a VARCHAR, reading_b VARCHAR,
+    gloss VARCHAR);
+
 CREATE TABLE IF NOT EXISTS mentions(
     person VARCHAR, chapter INTEGER, block_id BIGINT, n INTEGER);
 
@@ -259,6 +266,12 @@ def build(force: bool = True) -> Path:
     con.executemany('INSERT INTO lost_clues VALUES (?,?,?,?)', [
         (i, c['clue'], c['source'], c['meaning'])
         for i, c in enumerate(seed.lost_clues())])
+    con.executemany('INSERT INTO editions VALUES (?,?,?,?,?,?,?)', [
+        (e['name'], e['short'], e['family'], e['year'], e['extant'],
+         e['anno'], e['note']) for e in seed.editions()])
+    con.executemany('INSERT INTO variants VALUES (?,?,?,?,?,?,?)', [
+        (i, v['chapter'], v['category'], v['lemma'], v['reading_a'],
+         v['reading_b'], v['gloss']) for i, v in enumerate(seed.variants())])
 
     # --- 诗词
     poems, _ = extract(corpus)

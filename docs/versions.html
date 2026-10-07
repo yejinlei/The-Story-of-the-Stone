@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>版本谱 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="costume.html" class="">衣冠</a><a href="versions.html" class="on">版本谱</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<div class="card small" id="vsummary"></div>
+
+<h2>版本一览 · 哪些本子活着，哪些只剩半部</h2>
+<div class="card small">
+古人所谓「版本」，不是一个本子，而是一串本子：脂本十来种，各有存佚；程本两种，
+前后相差不满一年。<b>本工程的两条谱系由此分野</b>——底本止于第八十回，
+而真正的第一百二十回只在程高本一边。
+</div>
+<div class="grid" id="veds"></div>
+
+<h2>见证本 · 本工程实据一共有六份</h2>
+<div class="card small">
+「见证本」是校勘学的说法——凡真拿来比对的本子，一概称 witness。
+此间所据者六：本地脂评汇校本、维基文库转录的脂砚斋重评石头记（八十回）、
+甲戌本（十六回）、程甲本与程乙本（各一百二十回），以及本工程 AI 续写三十回。
+</div>
+<div class="grid" id="vwits"></div>
+
+<h2>回目对勘 · 八条题目便有一处不同</h2>
+<div class="card small">
+回目是全书最容易被改的地方，也是最容易露出改笔的地方。
+下表五本并列（AI 续写自第八十一回起），凡<b>与他本不同者皆标红</b>；
+点「仅有异者」则只看针锋相对的那几十回。
+</div>
+<div class="card gtools">
+  <button id="tOnly" class="on">仅有异者</button>
+  <button id="tAll">一百二十回全表</button>
+  <span class="gstat" id="vtitlestat"></span>
+</div>
+<div class="card" style="max-height:520px;overflow:auto"><table id="vtitletab"></table></div>
+
+<h2>篇幅之法 · 程高删了什么，补了什么</h2>
+<div class="card small">
+逐回字数是最粗的一道筛子，却也最直白。<b>横轴一至一百二十回</b>，
+脂谱两条线止于第八十回，程谱两条线走到底。两谱之间的距离，
+就是程伟元、高鹗整理改写的幅度。
+</div>
+<div class="card gcanvas">
+  <svg id="vlengths" viewBox="0 0 1080 320" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="card samples" id="vlenlist"></div>
+
+<h2>Delta 距离 · 第八十回处的一道断层</h2>
+<div class="card small" id="vdeltanote"></div>
+<div class="card gcanvas">
+  <svg id="vdelta" viewBox="0 0 1080 320" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="card"><table id="vdeltatab"></table></div>
+
+<h2>交叉熵 · 以脂本之模型，读程本之文字</h2>
+<div class="card small" id="ventropynote"></div>
+<div class="card gcanvas">
+  <svg id="ventropy" viewBox="0 0 1080 320" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="card"><table id="ventropytab"></table></div>
+
+<h2>体裁指纹 · 句长短、「笑」声稀、韵文退场</h2>
+<div class="card small">
+情节可以仿，下意识的笔习难改。以下六项皆可称量：<b>句长</b>、
+<b>对话所占</b>、<b>韵文密度</b>、<b>「笑道」之密</b>、
+<b>叹与冷笑</b>、<b>用字丰富度</b>。切换指标，看两谱各自的曲线在何处分手。
+</div>
+<div class="card gtools">
+  <button class="met on" data-f="xiaodao">笑道</button>
+  <button class="met" data-f="verse">韵文</button>
+  <button class="met" data-f="sent">句长</button>
+  <button class="met" data-f="quote">对话率</button>
+  <button class="met" data-f="tanqi">叹与冷笑</button>
+  <button class="met" data-f="ttr">用字丰富度</button>
+  <span class="gstat" id="vmetstat"></span>
+</div>
+<div class="card gcanvas">
+  <svg id="vmetrics" viewBox="0 0 1080 320" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="card"><table id="vaggtab"></table></div>
+
+<h2>显著字 · 前后判若两手的那些字</h2>
+<div class="card small" id="vwordsnote"></div>
+<div class="gwrap">
+  <div class="card samples" id="vfront"></div>
+  <div class="card samples" id="vback"></div>
+</div>
+
+<h2>人物消长 · 前八十回是女儿，后四十回是家事</h2>
+<div class="card small">
+同一批名字，在前后两半的出现频率差得厉害。下表按<b>后半相对于前半的倍数</b>排序：
+越往上，越是后四十回的当令人物；越往下，越是写完就再没人提的。
+</div>
+<div class="card"><table id="vpeopletab"></table></div>
+
+<h2>脂批分布 · 两个谱系互相印证</h2>
+<div class="card small" id="vannonote"></div>
+<div class="card gcanvas">
+  <svg id="vanno" viewBox="0 0 1080 300" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+
+<h2>校勘记 · 底本页下的一条条异文账簿</h2>
+<div class="card small">
+底本每一回页下的校记，便是逐字较量诸本的成绩单。此间录得若干条，
+可按版本筛：<b>点一个本子，只看涉及它的那些条</b>；原 — 文照录，以备覆核。
+</div>
+<div class="card gtools" id="vappfilter"></div>
+<div class="card" style="max-height:520px;overflow:auto"><table id="vapptab"></table></div>
+
+<h2>异文本体 · 手订的数条紧要关节</h2>
+<div class="card small">
+以上诸表皆由算法自动算出，以下几条则是人工著录且<b>已由此间数据核实</b>者（标「验」）：
+某字某句，此本作什么，彼本作什么，何以有此分别——这才是版本学要回答的。
+</div>
+<div class="card"><table id="vvarianttab"></table></div>
+
+<h2>方法与局限</h2>
+<div class="card small">
+一・程甲、程乙、脂评本与甲戌本文字取自维基文库转录本，转录难免有鲁鱼之误，
+且异写字经 data/variant_map.json 归位后才入统计。<br>
+二・Delta 用惯用词（虚词为主）密度的 z 向量，参照质心按 leave-one-out 计算，
+务必不含被评之回自身；若把他人之作与自家之作并列，仍受篇幅长短影响。<br>
+三・交叉熵的两个模型：前者以本地脂评汇校本前八十回训练（无泄漏），
+后者为避免自证，把程甲本后四十回拆作两半互为 held-out。<br>
+四・AI 续写每回仅千馀字，篇幅远短于程高本；交叉熵与用字丰富度两项因此偏高，读时须知。<br>
+五・统计学只能画出两截的分界线，无从断言执笔者为谁；本页所陈，皆是可复算的距离，
+不作作者归属之论定。
+</div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>推演与续写由多 Agent 生成，仅供研究玩索，非定本。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null;
+const NT=(v,d=2)=>v==null?'—':(+v).toFixed(d);
+const FAMF={'脂':'#9e2b25','过渡':'#8a6d3b','存疑':'#7a7a7a','程高':'#3b4a6b','校勘本':'#3f6b5e'};
+
+/* ---------- 折线图 ---------- */
+function chart(id,o){
+  const svg=$(id); if(!svg||!o.series.length) return;
+  const W=1080,H=+svg.getAttribute('viewBox').split(' ')[3];
+  const L=58,R=18,T=18,B=38, iw=W-L-R, ih=H-T-B;
+  const xs=o.xmin, xe=o.xmax;
+  let vs=[]; o.series.forEach(s=>s.pts.forEach(p=>vs.push(p[1])));
+  let lo=Math.min(...vs), hi=Math.max(...vs);
+  if(o.ymin!=null) lo=o.ymin; if(o.ymax!=null) hi=o.ymax;
+  if(hi-lo<1e-9){hi=lo+1;}
+  const pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
+  const X=v=>L+(v-xs)/(xe-xs)*iw;
+  const Y=v=>T+ih-(v-lo)/(hi-lo)*ih;
+  let g='';
+  // 网格与横轴
+  const step=o.step||10;
+  const GRID='stroke="#e3d9c4"', AX='fill="#8a7f6d" font-size="11"';
+  for(let x=Math.ceil(xs/step)*step;x<=xe;x+=step){
+    g+=`<line ${GRID} x1="${X(x)}" y1="${T}" x2="${X(x)}" y2="${T+ih}"/>`;
+    g+=`<text ${AX} text-anchor="middle" x="${X(x)}" y="${H-14}">${x}</text>`;
+  }
+  for(let i=0;i<=4;i++){
+    const v=lo+(hi-lo)*i/4, y=Y(v);
+    g+=`<line ${GRID} x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/>`;
+    g+=`<text ${AX} x="${L-8}" y="${y+4}" text-anchor="end">${v.toFixed(o.fix==null?2:o.fix)}</text>`;
+  }
+  if(o.mark!=null){
+    g+=`<line x1="${X(o.mark)}" y1="${T}" x2="${X(o.mark)}" y2="${T+ih}" stroke="#b02a2a" stroke-width="1.6" stroke-dasharray="6 4"/>`;
+    g+=`<text ${AX} x="${X(o.mark)+5}" y="${T+14}" fill="#b02a2a">${o.markTxt||''}</text>`;
+  }
+  if(o.zero && lo<0 && hi>0){} // 零线单独画
+  if(o.zero){
+    const y=Y(0);
+    if(y>T&&y<T+ih) g+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="#888" stroke-width="1.2"/>`;
+  }
+  o.series.forEach(s=>{
+    if(!s.pts.length) return;
+    const d=s.pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' ');
+    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.w||1.8}" ${s.dash?'stroke-dasharray="5 4"':''}/>`;
+  });
+  // 图例
+  let lx=L;
+  o.series.forEach(s=>{
+    g+=`<rect x="${lx}" y="${4}" width="14" height="4" fill="${s.color}"/>`;
+    g+=`<text ${AX} x="${lx+19}" y="${11}">${esc(s.name)}</text>`;
+    lx+=26+esc(s.name).length*13;
+  });
+  svg.innerHTML=g;
+}
+
+/* ---------- 版本本体与见证本 ---------- */
+function eds(){
+  const o=D.ontology.editions;
+  $('veds').innerHTML=o.map(e=>`<div class="card small">
+    <h3 style="margin:0 0 6px">${esc(e.name)}</h3>
+    <div class="small"><b>${esc(e.family)}</b> · ${esc(e.year)}<br>
+    存回：${esc(e.extant)}<br>批语：${esc(e.anno)}</div>
+    <div class="small" style="margin-top:6px;color:#5a4a44">${esc(e.note)}</div></div>`).join('');
+}
+function wits(){
+  $('vwits').innerHTML=D.editions.map(e=>`<div class="card small">
+    <h3 style="margin:0 0 6px;color:${e.color}">${esc(e.name)}</h3>
+    <div class="small">${esc(e.note)}</div>
+    <div class="small" style="margin-top:6px">回次 <b>${e.first}–${e.last}</b>（共 ${e.chapters} 回）<br>
+    通用汉字 <b>${(e.chars/10000).toFixed(2)} 万字</b></div></div>`).join('');
+  const cj=D.editions.find(e=>e.key==='chengjia'), hui=D.editions.find(e=>e.key==='hui');
+  $('vsummary').innerHTML=
+    `<b>六份见证本，两条谱系。</b>脂谱止于第八十回（${hui.chapters} 回 / ${(hui.chars/10000).toFixed(1)} 万字），
+     程谱别有后四十回（程甲 ${cj.chapters} 回 / ${(cj.chars/10000).toFixed(1)} 万字）；
+     另有甲戌本十六回可校前十回之异同，AI 续写三十回聊备一格。
+     回目相较，五本之间<b>一百二十回里有 ${D.titles.filter(t=>t.variants>1).length} 回题目不一</b>。`;
+}
+
+/* ---------- 回目对勘 ---------- */
+let TITLE_MODE='only';
+function titles(){
+  const rows=TITLE_MODE==='only'?D.titles.filter(t=>t.variants>1):D.titles;
+  const keys=['hui','zhiqi','jiaxu','chengjia','chengyi','ai'];
+  const names={hui:'汇校本',zhiqi:'脂评本',jiaxu:'甲戌本',chengjia:'程甲本',chengyi:'程乙本',ai:'AI续写'};
+  const base=Object.fromEntries(D.titles.map(t=>[t.c,t.rows.hui||t.rows.zhiqi||'']));
+  let h='<tr><th>回</th>'+keys.map(k=>`<th>${names[k]}</th>`).join('')+'</tr>';
+  rows.forEach(t=>{
+    h+=`<tr><td>${t.c}</td>`+keys.map(k=>{
+      const v=t.rows[k]||''; if(!v) return '<td class="small">—</td>';
+      const diff=(t.variants>1) && v.replace(/\s/g,'')!==(base[t.c]||'').replace(/\s/g,'');
+      return `<td ${diff?'style="color:#b02a2a"':''}>${esc(v)}</td>`;
+    }).join('')+'</tr>';
+  });
+  $('vtitletab').innerHTML=h;
+  $('vtitlestat').textContent=`共 ${rows.length} 回；红色为该回与他本不同者`;
+}
+function bindTitles(){
+  $('tOnly').onclick=()=>{TITLE_MODE='only';$('tOnly').classList.add('on');$('tAll').classList.remove('on');titles();};
+  $('tAll').onclick=()=>{TITLE_MODE='all';$('tAll').classList.add('on');$('tOnly').classList.remove('on');titles();};
+}
+
+/* ---------- 篇幅 ---------- */
+function lens(){
+  const pick=k=>({name:D.editions.find(e=>e.key===k).short,color:D.editions.find(e=>e.key===k).color,
+      pts:(D.lengths[k]||[]).map(r=>[r.c,r.n])});
+  chart('vlengths',{series:['hui','zhiqi','chengjia','chengyi'].map(pick),xmin:1,xmax:120,step:10,fix:0,mark:80,markTxt:'八十回'});
+  // 增幅之最
+  const A={},B={};
+  D.lengths.hui.forEach(r=>A[r.c]=r.n); D.lengths.chengjia.forEach(r=>B[r.c]=r.n);
+  let rows=Object.keys(A).map(c=>({c:+c,a:A[c],b:B[c]||0,d:(B[c]||0)-A[c]}));
+  rows.sort((x,y)=>x.d-y.d);
+  const mk=(arr,sign,txt)=>`<div class="card small"><b>${txt}</b><br>`+
+    arr.slice(0,8).map(r=>`第${r.c}回 ${sign}${Math.abs(r.d)} 字（脂本 ${r.a} → 程甲 ${r.b}）`).join('<br>')+'</div>';
+  $('vlenlist').innerHTML=mk(rows,'少','删削最多的八回')+mk(rows.slice().reverse(),'多','增补最多的八回');
+}
+
+/* ---------- Delta ---------- */
+function deltas(){
+  const cj=D.delta.chengjia, cy=D.delta.chengyi||[];
+  chart('vdelta',{series:[
+    {name:'程甲本',color:'#3b4a6b',pts:cj.map(r=>[r.c,r.d])},
+    {name:'程乙本',color:'#3f6b5e',pts:cy.map(r=>[r.c,r.d]),w:1.2,dash:true}
+  ],xmin:1,xmax:120,step:10,zero:true,mark:80,markTxt:'八十／八十一'});
+  const mean=a=>a.reduce((s,r)=>s+r.d,0)/Math.max(1,a.length);
+  const mhead=mean(cj.filter(r=>r.c<=80)), mtail=mean(cj.filter(r=>r.c>80));
+  const hneg=cj.filter(r=>r.c<=80&&r.d<0).length;
+  const tpos=cj.filter(r=>r.c>80&&r.d>0).length;
+  const tneg=cj.filter(r=>r.c>80&&r.d<0).length;
+  const ai=D.delta_ai||[], mai=ai.length?mean(ai):null;
+  $('vdeltanote').innerHTML=
+    `Burrows 的 Delta 法：<b>取一百余个惯用词（虚词为主）的千字密度，逐词标准化，
+    再算到两组参照质心的曼哈顿距离之差</b>。参照质心用 leave-one-out，不含被评之回自身。
+    图中 <b>纵坐标 &gt; 0 即偏向前八十回，&lt; 0 即偏向后四十回</b>。
+    程甲本前八十回均值 <b>${mhead.toFixed(3)}</b>，后四十回均值 <b>${mtail.toFixed(3)}</b>：
+    前八十回里 <b>${80-hneg}</b> 回为正、${hneg} 回例外；
+    后四十回则 <b>${tneg}</b> 回为负${tpos?`、${tpos} 回为正`:'、无一回为正'}。
+    分界线落在第八十回与第八十一回之间——这正是历来争论不休的那道接缝。
+    ${mai!=null?`本工程 AI 续写三十回置于同一坐标，均值 <b>${mai.toFixed(3)}</b>，
+    比程高本更远地离开前八十回——可见刻意模仿，终不是那只手。`:''}`;
+  const blocks=[];
+  for(let s=1;s<=120;s+=10){
+    const sub=cj.filter(r=>r.c>=s&&r.c<s+10);
+    if(sub.length) blocks.push({a:s,b:s+9,d:mean(sub)});
+  }
+  let h='<tr><th>回次</th><th>Δ（距后四十回 − 距前八十回）</th><th>归属</th></tr>';
+  blocks.forEach(x=>{h+=`<tr><td>${x.a}–${x.b}</td><td>${NT(x.d,3)}</td>
+    <td style="color:${x.d>0?'#2c6e49':'#b02a2a'}">${x.d>0?'偏前八十回':'偏后四十回'}</td></tr>`;});
+  $('vdeltatab').innerHTML=h;
+}
+
+/* ---------- 交叉熵 ---------- */
+function entropies(){
+  const rows=D.entropy.chengjia||[];
+  chart('ventropy',{series:[
+    {name:'以脂本前八十回训练',color:'#9e2b25',pts:rows.map(r=>[r.c,r.hz])},
+    {name:'以程本后四十回训练',color:'#3b4a6b',pts:rows.map(r=>[r.c,r.hc])}
+  ],xmin:1,xmax:120,step:10,fix:2,mark:80,markTxt:'八十回'});
+  const mean=(rs,f)=>{const v=rs.filter(r=>r.c<=80);return v.reduce((s,r)=>s+r[f],0)/Math.max(1,v.length);};
+  const tail=(rs,f)=>{const v=rs.filter(r=>r.c>80);return v.reduce((s,r)=>s+r[f],0)/Math.max(1,v.length);};
+  const zh=mean(rows,'hz'), zt=tail(rows,'hz'), ch=mean(rows,'hc'), ct=tail(rows,'hc');
+  $('ventropynote').innerHTML=
+  `字符三元组模型给出的交叉熵：<b>越低越像训练语料</b>。以脂本前八十回的模型读程甲本，
+  前八十回均值 <b>${zh.toFixed(3)}</b> bit/字，后四十回均值 <b>${zt.toFixed(3)}</b> bit/字
+  ——后四十回在脂本眼里<b>每字多出 ${(zt-zh).toFixed(3)} bit 的意外</b>。
+  反之亦然：换用程本后四十回训练的模型（为避免自证，后四十回拆作两半互为 held-out），
+  前八十回升至 ${ch.toFixed(3)}、后四十回降为 ${ct.toFixed(3)}，<b>每字相差 ${(ch-ct).toFixed(3)} bit</b>。
+  两个模型各认得自己那一半，越过第八十回便都不认得了。`;
+  let h='<tr><th>语料</th><th>在脂本模型下</th><th>在程本模型下</th><th>相差</th></tr>';
+  ['chengjia','chengyi','zhiqi','ai'].forEach(k=>{
+    const rs=D.entropy[k]; if(!rs||!rs.length) return;
+    const nm=D.editions.find(e=>e.key===k).short;
+    const a=rs.reduce((s,r)=>s+r.hz,0)/rs.length, b=rs.reduce((s,r)=>s+r.hc,0)/rs.length;
+    h+=`<tr><td>${nm}</td><td>${NT(a,3)}</td><td>${NT(b,3)}</td><td>${NT(b-a,3)}</td></tr>`;
+  });
+  $('ventropytab').innerHTML=h;
+}
+
+/* ---------- 体裁指纹 ---------- */
+let METRIC='xiaodao';
+const MET_NAME={xiaodao:'「笑道」密度（每千字）',verse:'韵文密度（每千字）',
+  sent:'平均句长（字）',quote:'对话所占（每千字）',tanqi:'叹道／冷笑（每千字）',
+  ttr:'用字丰富度'};
+function metrics(){
+  const keys=D.editions.filter(e=>['hui','zhiqi','chengjia','chengyi','ai'].includes(e.key));
+  chart('vmetrics',{series:keys.map(e=>({name:e.short,color:e.color,w:1.6,
+      pts:(D.profile[e.key]||[]).map(r=>[r.c,r[METRIC]]).filter(p=>p[1]!=null)})),
+    xmin:1,xmax:120,step:10,fix:2,mark:80,markTxt:'八十回'});
+  $('vmetstat').textContent=MET_NAME[METRIC];
+}
+function bindMetrics(){
+  document.querySelectorAll('button.met').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('button.met').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); METRIC=b.dataset.f; metrics();
+  });
+}
+function aggs(){
+  const rows=[['指标','脂评汇校本 前八十','程甲本 前八十','程甲本 后四十','程乙本 后四十','AI 续写']];
+  const pick=(k,f,side)=>{const a=(D.agg[k]||{})[f];return a?a[side]:null;};
+  [['sent','平均句长'],['quote','对话千字率'],['verse','韵文千字率'],
+   ['xiaodao','「笑道」千字密度'],['tanqi','叹冷千字密度'],['ttr','用字丰富度'],
+   ['n','每回字数']].forEach(([f,name])=>{
+    rows.push([name,pick('hui',f,'head'),pick('chengjia',f,'head'),
+      pick('chengjia',f,'tail'),pick('chengyi',f,'tail'),pick('ai',f,'tail')]);
+  });
+  let h='<tr>'+rows[0].map(x=>`<th>${x}</th>`).join('')+'</tr>';
+  rows.slice(1).forEach(r=>{h+='<tr>'+r.map((x,i)=>
+    `<td>${i===0?x:(x==null?'—':(Math.abs(x)>=1000?Math.round(x):NT(x,2)))}</td>`).join('')+'</tr>';});
+  $('vaggtab').innerHTML=h;
+}
+
+/* ---------- 显著字 ---------- */
+function words(){
+  const d=D.distinct;
+  const ma=d.back.find(y=>y.w==='吗');
+  $('vwordsnote').innerHTML=
+    `以前八十回与后四十回的字频相比，取对数似然比 G² 最大的若干字——<b>密度相差一倍半以上者才算数</b>。
+     前半偏多者多是家常口语之字（笑、吃、忙、方、每）；后半冒出来的则多是<b>官场刑名与续书新人</b>：
+     政、琏、衙、办、尚、薛蝌之「蝌」、宝蟾之「蟾」。${
+      ma?`连疑问语气词「吗」也是后半方才当行——前八十回 ${ma.h} 见，后四十回 ${ma.t} 见，
+     按密度折算是前者的 <b>${(1/ma.r).toFixed(1)} 倍</b>，这样的口吻差别，很难作伪。`:''}
+     另有「此有彼无」者更有意思：取出现十二次以上者，<b>前八十回独有 ${d.only_head.length} 字
+     （嬷、茄、螃蟹、玫瑰、茯苓一类新名物居其大半）；
+     后四十回独有者却只 ${d.only_tail.length} 字</b>——只在别人开出的名单上接着讲事，不曾添过一件新物。`;
+  const col=(arr,title,desc)=>`<b>${title}</b><br><span class="small">${desc}</span><br>`+
+    arr.map(x=>`<span style="display:inline-block;margin:2px;padding:1px 7px;border:1px solid #e0d5bd;border-radius:9px">${esc(x.w)} <i style="color:#8a7f6d;font-size:11px">${x.h}/${x.t}</i></span>`).join('');
+  $('vfront').innerHTML=col(d.front,'前八十回偏多','各字下注：前半出现次数／后半出现次数')+
+    `<div class="small" style="margin-top:8px">前八十回独有：<b>${d.only_head.map(esc).join(' ')}</b></div>`;
+  $('vback').innerHTML=col(d.back,'后四十回偏多','各字下注：前半出现次数／后半出现次数')+
+    `<div class="small" style="margin-top:8px">后四十回独有：<b>${d.only_tail.map(esc).join(' ')}</b></div>`;
+}
+
+/* ---------- 人物消长 ---------- */
+function people(){
+  let h='<tr><th>人物</th><th>前八十回（每万字）</th><th>后四十回（每万字）</th><th>倍数</th></tr>';
+  D.people.forEach(p=>{
+    const col=p.ratio>1.4?'#2c6e49':(p.ratio<0.6?'#b02a2a':'#5a4a44');
+    h+=`<tr><td>${esc(p.name)}</td><td>${NT(p.rh)}</td><td>${NT(p.rt)}</td>
+      <td style="color:${col}">${NT(p.ratio)}×</td></tr>`;
+  });
+  $('vpeopletab').innerHTML=h;
+}
+
+/* ---------- 脂批分布 ---------- */
+function anno(){
+  const loc=D.anno.local;
+  const order=Object.keys(loc).sort((a,b)=>
+    Object.values(loc[b]).reduce((s,x)=>s+x,0)-Object.values(loc[a]).reduce((s,x)=>s+x,0)).slice(0,7);
+  const colors=['#9e2b25','#c2504a','#b08d57','#3b4a6b','#3f6b5e','#7d5ba6','#8a6d3b'];
+  const series=order.map((e,i)=>({name:e,color:colors[i%colors.length],w:1.5,
+    pts:Object.entries(loc[e]).map(([c,n])=>[+c,n])}));
+  chart('vanno',{series,xmin:1,xmax:80,step:8,fix:0});
+  const ext=D.anno.ext;
+  const topExt=Object.keys(ext).sort((a,b)=>
+    Object.values(ext[b]).reduce((s,x)=>s+x,0)-Object.values(ext[a]).reduce((s,x)=>s+x,0)).slice(0,5);
+  $('vannonote').innerHTML=
+    `其一，底本脂批 <b>${D.anno.local_total}</b> 条，各随其本；下图是批语最多的七个本子逐回分布，
+     某本在某回忽然断了线，往往正是它残阙或钞手搁笔之处。
+     其二，维基文库所录的脂评本与甲戌本，内嵌脂批合计 <b>${D.anno.ext_total}</b> 条，
+     版本可考者以 ${topExt.map(esc).join('、')} 为多——两重谱系各自独立钞得，正可互校。`;
+}
+
+/* ---------- 校勘记 ---------- */
+let APP_ED='全部';
+function apparatus(){
+  const all=new Set(); D.apparatus.forEach(r=>r.eds.forEach(e=>all.add(e)));
+  $('vappfilter').innerHTML=`<button class="aped on" data-e="全部">全部 ${D.apparatus.length} 条</button>`+
+    [...all].map(e=>`<button class="aped" data-e="${esc(e)}">${esc(e)}本 ${
+      D.apparatus.filter(r=>r.eds.includes(e)).length} 条</button>`).join('');
+  drawApp();
+  document.querySelectorAll('button.aped').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('button.aped').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); APP_ED=b.dataset.e; drawApp();
+  });
+}
+function drawApp(){
+  const rows=APP_ED==='全部'?D.apparatus:D.apparatus.filter(r=>r.eds.includes(APP_ED));
+  let h='<tr><th>回</th><th>词条</th><th>诸本</th><th>校记</th></tr>';
+  rows.forEach(r=>{
+    h+=`<tr><td>${r.c}${esc(r.no)}</td><td>${esc(r.lemma)||'—'}</td>
+      <td class="small">${r.eds.map(esc).join('・')||'—'}</td>
+      <td class="small">${esc(r.text)}</td></tr>`;
+  });
+  $('vapptab').innerHTML=h;
+}
+
+/* ---------- 异文本体 ---------- */
+function variants(){
+  let h='<tr><th>回</th><th>类目</th><th>词条</th><th>此本作</th><th>彼本作</th><th>按语</th></tr>';
+  D.ontology.variants.forEach(v=>{
+    h+=`<tr><td>${esc(v.chapter)}</td><td>${esc(v.category)}</td><td>${esc(v.lemma)}</td>
+      <td class="small">${esc(v.reading_a)}</td><td class="small">${esc(v.reading_b)}</td>
+      <td class="small">${esc(v.gloss)}</td></tr>`;
+  });
+  $('vvarianttab').innerHTML=h;
+}
+
+fetch('data/versions.json').then(r=>r.json()).then(d=>{
+  D=d;
+  eds(); wits(); titles(); bindTitles(); lens(); deltas(); entropies();
+  metrics(); bindMetrics(); aggs(); words(); people(); anno();
+  apparatus(); variants();
+}).catch(e=>{$('vsummary').innerHTML='版本数据未成：'+e;});
+</script></body></html>

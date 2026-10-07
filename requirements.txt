@@ -4,3 +4,4 @@ openai>=1.40.0
 python-dotenv>=1.0.0
 duckdb>=1.0.0
 pypinyin>=0.51.0
+opencc-python-reimplemented>=0.1.7
