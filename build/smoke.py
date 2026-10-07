@@ -14,10 +14,11 @@ httpd = socketserver.TCPServer(('127.0.0.1', PORT), handler)
 threading.Thread(target=httpd.serve_forever, daemon=True).start()
 
 urls = ['index.html', 'read.html', 'entities.html', 'poems.html',
-        'debate.html', 'continuation.html', 'graph.html',
+        'debate.html', 'continuation.html', 'graph.html', 'mirror.html',
         'assets/app.css', 'data/poems.json', 'data/entities.json',
         'data/graph.json', 'data/debates.json', 'data/continuations.json',
-        'data/stats.json', 'data/chapters/001.json', 'data/chapters/080.json']
+        'data/mirror.json', 'data/stats.json',
+        'data/chapters/001.json', 'data/chapters/080.json']
 ok = True
 for u in urls:
     try:

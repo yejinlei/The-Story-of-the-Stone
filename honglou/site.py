@@ -9,17 +9,19 @@ poems.html        诗词本体：体裁、作者、意象、谶应
 debate.html       多 Agent 推演全过程（含技术组的统计证据）
 continuation.html 续写正文 + 风格门禁 + 脂砚斋批点
 graph.html        本体图谱（自绘力导向图，无外部依赖）
+mirror.html       字镜：字符三元组模型，可拟笔、可辨体、可作全书光谱
 
 数据全部由 DuckDB 导出为静态 JSON，浏览器不需要任何数据库。
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import db, graph, paths, theme
+from . import db, graph, mirror, paths, theme
 
 SITE = paths.SITE_DIR
 DATA = SITE / 'data'
@@ -332,7 +334,7 @@ def export_data() -> None:
 
     # --- 人物提及统计
     hot = db.q("""SELECT person, SUM(n) AS total FROM mentions
-                  GROUP BY person ORDER BY total DESC LIMIT 80""")
+                  GROUP BY person ORDER BY total DESC, person LIMIT 80""")
     (DATA / 'mentions.json').write_text(
         json.dumps(hot, ensure_ascii=False), encoding='utf-8')
 
@@ -390,6 +392,9 @@ def export_data() -> None:
 
     # --- 图谱（本体论七重视图，见 honglou/graph.py）
     graph.build(DATA)
+
+    # --- 字镜（字符三元组模型、逐回光谱、风格基准，见 honglou/mirror.py）
+    mirror.build(DATA)
 
     # --- 统计概览
     stats = dict(
@@ -458,6 +463,10 @@ def build_site() -> Path:
 <div class="card"><h3>图谱</h3><p class="small">七重视图：人物关系、家族府邸、意象谱、
 器物典故、册籍判词探佚、时序长卷、推演脉络。点选即见本体记录与逐回分布。</p>
 <a href="graph.html">进入 →</a></div>
+<div class="card"><h3>字镜</h3><p class="small">把正文、脂批、诗词压成字符三元组模型：
+可<b>拟笔</b>（马尔可夫接笔，仿其口气），可<b>辨体</b>（粘贴任意文本，算困惑度与四项风格指纹，
+并查出笔意最近的回），并有前八十回八折交叉校验的<b>全书光谱</b>。</p>
+<a href="mirror.html">进入 →</a></div>
 </div>"""
     (SITE / 'index.html').write_text(
         _page('总览', idx, 'index.html'), encoding='utf-8')
@@ -628,6 +637,11 @@ def build_site() -> Path:
     # ---------- graph
     (SITE / 'graph.html').write_text(
         _page('图谱', graph.BODY, 'graph.html', graph.JS), encoding='utf-8')
+
+    # ---------- mirror（字镜）
+    ver = hashlib.md5((DATA / 'mirror.json').read_bytes()).hexdigest()[:8]
+    (SITE / 'mirror.html').write_text(
+        _page('字镜', mirror.BODY, 'mirror.html', mirror.js(ver)), encoding='utf-8')
     return SITE
 
 

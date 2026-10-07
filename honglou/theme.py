@@ -204,9 +204,16 @@ button{{font-family:inherit;cursor:pointer;background:linear-gradient(180deg,#ff
 button:hover{{border-color:var(--cinnabar);color:var(--cinnabar)}}
 button.on{{background:linear-gradient(180deg,var(--cinnabar-l),var(--cinnabar));
   border-color:var(--cinnabar-d);color:#fdf6ec}}
-input,select{{font-family:inherit;font-size:14px;padding:4px 9px;border:1px solid var(--line);
+input,select,textarea{{font-family:inherit;font-size:14px;padding:4px 9px;border:1px solid var(--line);
   border-radius:2px;background:var(--paper2);color:var(--ink)}}
-input:focus,select:focus{{outline:none;border-color:var(--cinnabar)}}
+input:focus,select:focus,textarea:focus{{outline:none;border-color:var(--cinnabar)}}
+textarea{{width:100%;font-family:var(--kai);font-size:15px;line-height:1.9;resize:vertical}}
+input[type=range]{{vertical-align:middle;padding:0;width:110px}}
+.pane{{animation:rise .5s ease both}}
+#out div+p{{margin-top:0}}
+#out div{{text-indent:0}}
+#radar text,#sp text{{font-family:var(--serif)}}
+#sp rect:hover{{opacity:1}}
 
 /* ---------- 页脚 ---------- */
 footer{{border-top:1px solid var(--line);padding:26px 20px 40px;text-align:center;
@@ -231,7 +238,7 @@ main>*{{animation:rise .55s ease both}}
 NAV = [('index.html', '总览'), ('read.html', '正文·脂批'),
        ('entities.html', '本体实体'), ('poems.html', '诗词'),
        ('debate.html', '推演'), ('continuation.html', '续写'),
-       ('graph.html', '图谱')]
+       ('graph.html', '图谱'), ('mirror.html', '字镜')]
 
 
 def page(title: str, body: str, active: str = '', extra_js: str = '') -> str:
