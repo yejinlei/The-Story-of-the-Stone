@@ -151,7 +151,8 @@ def build(dst: Path | None = None) -> Path:
                 tone=_tone((it['emotion'] or '') + (it['context'] or '')),
                 poets=[p for p, _ in poets[im].most_common(5)],
                 lines=samples.get(im, []),
-                ev=[[c, n] for c, n in hit[:40]],
+                # 逐回分布不可截断：从前 40 条，月只见四十五回，其后三十二回尽失
+                ev=[[c, n] for c, n in hit],
             ))
 
     links = [dict(a=a, b=b, n=n) for (a, b), n in pair.most_common(70) if n >= 2]
