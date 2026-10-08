@@ -242,6 +242,10 @@ main>*{{animation:rise .55s ease both}}
   .hero .verse{{font-size:18px}}
   .manuscript{{padding:16px 14px;line-height:32px}}
   table{{font-size:13px}}
+  /* 窄屏上宽表格只在卡片内横向滚动，不牵动整页 */
+  .card{{overflow-x:auto}}
+  table{{min-width:560px}}
+  .gcanvas{{overflow-x:auto}}
 }}
 """
 

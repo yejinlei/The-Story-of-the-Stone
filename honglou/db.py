@@ -212,6 +212,57 @@ def _poem_images(poems: list[dict]) -> list[tuple[str, str, str, int]]:
     return out
 
 
+def _apply_poem_fixes(con) -> int:
+    """以底本拼接校订个别诗词条目（见 ontology_seed.POEM_FIXES）。
+
+    底本 PDF 的正文一行一块，脂批与叙述夹杂其间，自动抽取时阕界常乱：
+    第五回十二支曲一度彼此吞并，「恨无常」得五十五句、「虚花悟」只剩两句。
+    此处按人工校订本重排句读，并重算齐言、虚词、同韵诸项与意象标注。
+    """
+    from . import ontology_seed as seed
+    from .poems import punct_free, sentences, verse_score
+
+    imgs = [(i['name'], i['category']) for i in seed.imagery()]
+    fixed = 0
+    for f in seed.poem_fixes():
+        row = con.execute('SELECT id FROM poems WHERE chapter=? AND title=?',
+                          [f['chapter'], f['title']]).fetchone()
+        if not row:
+            continue
+        pid = row[0]
+        sents = sentences(f['text'])
+        lines = [s['body'] for s in sents if s['body']]
+        if len(lines) < 2:
+            continue
+        sc = verse_score(sents)
+        body = punct_free(f['text'])
+        con.execute('UPDATE poems SET text=?, n_lines=?, main_len=?, xu=?, rhyme=? '
+                    'WHERE id=?',
+                    [body, len(lines), sc['main_len'], sc['xu'], sc['rhyme'], pid])
+        con.execute('DELETE FROM poem_lines WHERE poem_id=?', [pid])
+        con.executemany('INSERT INTO poem_lines VALUES (?,?,?)',
+                        [(pid, i, ln) for i, ln in enumerate(lines)])
+        con.execute('DELETE FROM poem_images WHERE poem_id=?', [pid])
+        for name, cat in imgs:
+            c = body.count(name)
+            if c:
+                con.execute('INSERT INTO poem_images VALUES (?,?,?,?)',
+                            [pid, name, cat, c])
+        fixed += 1
+
+    for pre in seed.POEM_DROP_PREFIXES:
+        for r in con.execute('SELECT id FROM poems WHERE text LIKE ?',
+                             [pre + '%']).fetchall():
+            for t in ('poem_lines', 'poem_images'):
+                con.execute(f'DELETE FROM {t} WHERE poem_id=?', [r[0]])
+            con.execute('DELETE FROM poems WHERE id=?', [r[0]])
+
+    for frag, title in seed.POEM_RETITLES:
+        con.execute("UPDATE poems SET title=? WHERE (title IS NULL OR title='') "
+                    'AND text LIKE ?', [title, '%' + frag + '%'])
+    return fixed
+
+
 def build(force: bool = True) -> Path:
     from . import ontology_seed as seed
     from .poems import extract, guess_genre
@@ -321,6 +372,7 @@ def build(force: bool = True) -> Path:
     con.executemany('INSERT INTO poem_lines VALUES (?,?,?)', lrows)
     irows = _poem_images(poems)
     con.executemany('INSERT INTO poem_images VALUES (?,?,?,?)', irows)
+    _apply_poem_fixes(con)          # 人工校订（第五回十二支曲等）
 
     # --- 人物提及
     con.executemany('INSERT INTO mentions VALUES (?,?,?,?)', _mentions(corpus))

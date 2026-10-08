@@ -12,14 +12,14 @@
 </header>
 <main>
 <h2>诗词本体</h2>
-<div class="card small">脂本前八十回共录诗词曲赋 <b>187</b> 首
+<div class="card small">脂本前八十回共录诗词曲赋 <b>186</b> 首
 （判词、红楼梦曲、灯谜、花签、联句、诔文一并收录）。
 <b>诗谶、雅集、意象指纹与诗风度量见下</b>；若要逐首翻检，
 页末「逐首总览」可按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
 <div class="grid">
-<div class="card"><h3>体裁</h3><span class='tag'>七绝 52</span><span class='tag'>七律 24</span><span class='tag'>判词 20</span><span class='tag'>五绝 18</span><span class='tag'>曲 15</span><span class='tag'>词/曲 14</span><span class='tag'>五律 9</span><span class='tag'>词 8</span><span class='tag'>花签 8</span><span class='tag'>联句 6</span><span class='tag'>歌行 5</span><span class='tag'>谣谚 1</span><span class='tag'>对联 1</span><span class='tag'>六言 1</span><span class='tag'>四言 1</span><span class='tag'>四言谜 1</span><span class='tag'>偈 1</span><span class='tag'>酒令 1</span><span class='tag'>诔 1</span></div>
-<div class="card"><h3>作者</h3><span class='tag'>未详（叙述者/集体） 78</span><span class='tag'>（警幻新制） 14</span><span class='tag'>林黛玉 14</span><span class='tag'>贾宝玉 12</span><span class='tag'>薛宝琴 9</span><span class='tag'>贾探春 5</span><span class='tag'>史湘云 5</span><span class='tag'>薛宝钗 5</span><span class='tag'>香菱 4</span><span class='tag'>贾元春 3</span><span class='tag'>贾迎春 3</span><span class='tag'>贾惜春 3</span><span class='tag'>李纨 3</span><span class='tag'>贾雨村 2</span><span class='tag'>（批宝玉） 2</span><span class='tag'>花袭人 2</span></div>
-<div class="card"><h3>高频意象</h3><span class='tag'>玉 43</span><span class='tag'>春 42</span><span class='tag'>云 34</span><span class='tag'>金 31</span><span class='tag'>梦 28</span><span class='tag'>水 26</span><span class='tag'>秋 24</span><span class='tag'>月 23</span><span class='tag'>山 18</span><span class='tag'>夜 18</span><span class='tag'>霜 17</span><span class='tag'>雪 16</span><span class='tag'>菊 15</span><span class='tag'>影 13</span></div>
+<div class="card"><h3>体裁</h3><span class='tag'>七绝 51</span><span class='tag'>七律 24</span><span class='tag'>判词 20</span><span class='tag'>五绝 18</span><span class='tag'>曲 15</span><span class='tag'>词/曲 14</span><span class='tag'>五律 9</span><span class='tag'>词 8</span><span class='tag'>花签 8</span><span class='tag'>联句 6</span><span class='tag'>歌行 5</span><span class='tag'>谣谚 1</span><span class='tag'>对联 1</span><span class='tag'>六言 1</span><span class='tag'>四言 1</span><span class='tag'>四言谜 1</span><span class='tag'>偈 1</span><span class='tag'>酒令 1</span><span class='tag'>诔 1</span></div>
+<div class="card"><h3>作者</h3><span class='tag'>未详（叙述者/集体） 77</span><span class='tag'>（警幻新制） 14</span><span class='tag'>林黛玉 14</span><span class='tag'>贾宝玉 12</span><span class='tag'>薛宝琴 9</span><span class='tag'>贾探春 5</span><span class='tag'>史湘云 5</span><span class='tag'>薛宝钗 5</span><span class='tag'>香菱 4</span><span class='tag'>贾元春 3</span><span class='tag'>贾迎春 3</span><span class='tag'>贾惜春 3</span><span class='tag'>李纨 3</span><span class='tag'>贾雨村 2</span><span class='tag'>（批宝玉） 2</span><span class='tag'>花袭人 2</span></div>
+<div class="card"><h3>高频意象</h3><span class='tag'>玉 42</span><span class='tag'>春 35</span><span class='tag'>云 32</span><span class='tag'>梦 28</span><span class='tag'>金 27</span><span class='tag'>水 25</span><span class='tag'>秋 25</span><span class='tag'>月 24</span><span class='tag'>山 18</span><span class='tag'>夜 18</span><span class='tag'>霜 17</span><span class='tag'>雪 16</span><span class='tag'>菊 15</span><span class='tag'>泪 13</span></div>
 </div>
 <h2>诗谶 · 诗里先说出的结局</h2>
 <div class="card small">
@@ -97,7 +97,7 @@
 </div>
 <div class="card"><table id="poDoubtTab"></table></div>
 
-<h2>逐首总览 · 共 187 首</h2>
+<h2>逐首总览 · 共 186 首</h2>
 <div class="card small">体裁：
 <select id="genre"><option value="">全部</option></select>
 作者：<select id="author"><option value="">全部</option></select>
@@ -118,13 +118,17 @@ fetch('data/poems.json').then(r=>r.json()).then(ps=>{
   [...new Set(ps.map(p=>p.genre))].sort().forEach(g=>gsel.add(new Option(g,g)));
   const authors=[...new Set(ps.map(p=>(p.author||'').trim()).filter(Boolean))].sort();
   authors.forEach(a=>asel.add(new Option(a,a)));
-  function show(){
+  // 逐首全量铺开，页面高逾十万像素，翻检不便：故分批，四十首一批
+  let n=40,STEP=40;
+  function show(keep){
+    if(!keep)n=STEP;
     const g=gsel.value,a=asel.value,k=kw.value.trim();
     const hit=ps.filter(p=>(!g||p.genre===g)&&(!a||(p.author||'').trim()===a)
       &&(!k||(p.text||'').includes(k)||(p.title||'').includes(k)
          ||(p.lines||[]).join('').includes(k)||(p.images||[]).some(x=>x.includes(k))));
-    cnt.textContent=`共 ${ps.length} 首，当前显示 ${hit.length} 首`;
-    box.innerHTML=hit.map(p=>{
+    const part=hit.slice(0,n);
+    cnt.textContent=`共 ${ps.length} 首，当前筛得 ${hit.length} 首，已显示 ${part.length} 首`;
+    const html=part.map(p=>{
       const lines=(p.lines&&p.lines.length)?p.lines:[p.text||''];
       const body=lines.map(l=>`<div>${esc(l)}</div>`).join('');
       const img=(p.images||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join('');
@@ -136,9 +140,15 @@ fetch('data/poems.json').then(r=>r.json()).then(ps=>{
         +(img?`<div>意象：${img}</div>`:'')
         +`<div class="small">句数 ${p.n_lines}　齐言 ${p.main_len}　`
         +`韵基一致率 ${(p.rhyme||0).toFixed(2)}　虚词率 ${(p.xu||0).toFixed(2)}</div>${st}</div>`;
-    }).join('')||'<p class="small">没有符合条件的诗词。</p>';
+    }).join('');
+    box.innerHTML=(html||'<p class="small">没有符合条件的诗词。</p>')
+      +(hit.length>part.length
+        ? `<div class="card small" style="text-align:center"><button id="moreBtn">`
+          +`再载 ${Math.min(STEP,hit.length-part.length)} 首（还有 ${hit.length-part.length} 首）</button></div>`:'');
+    const mb=document.getElementById('moreBtn');
+    if(mb)mb.onclick=()=>{n+=STEP;show(true);};
   }
-  gsel.onchange=show;asel.onchange=show;kw.oninput=show;show();
+  gsel.onchange=()=>show();asel.onchange=()=>show();kw.oninput=()=>show();show();
 });
 
 (function(){

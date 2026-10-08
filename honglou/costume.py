@@ -514,7 +514,8 @@ BODY = """
   <svg id="cosperson" viewBox="0 0 1080 420" preserveAspectRatio="xMidYMin meet"></svg></div>
 <div class="gwrap">
   <div class="card small" id="cospeople"><p class="small">点一点看此人的衣裳与服色原句。</p></div>
-  <aside class="card gside" id="cospside"></aside>
+  <aside class="card gside" id="cospside"><p class="small">点左栏一个人、或图上一点，
+  此处见其衣裳与服色原句。</p></aside>
 </div>
 
 <h2>逐回疏密 · 这笔笔墨自第几回淡下去</h2>

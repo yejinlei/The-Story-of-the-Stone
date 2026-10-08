@@ -385,7 +385,7 @@ function buildVoiceTabs(){
   $('vhint').textContent=v.hint;
 }
 
-fetch('data/mirror.json?v=5a15d0e3').then(r=>r.json()).then(d=>{
+fetch('data/mirror.json?v=e74a8c5d').then(r=>r.json()).then(d=>{
   DOC=d;XU=new Set(d.xuci);
   CLEAN=new RegExp('[^一-鿿'+d.punct+']','g');
   d.voices.forEach(v=>VM[v.id]=mkModel(v.grams));

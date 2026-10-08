@@ -125,13 +125,17 @@ fetch('data/poems.json').then(r=>r.json()).then(ps=>{
   [...new Set(ps.map(p=>p.genre))].sort().forEach(g=>gsel.add(new Option(g,g)));
   const authors=[...new Set(ps.map(p=>(p.author||'').trim()).filter(Boolean))].sort();
   authors.forEach(a=>asel.add(new Option(a,a)));
-  function show(){
+  // 逐首全量铺开，页面高逾十万像素，翻检不便：故分批，四十首一批
+  let n=40,STEP=40;
+  function show(keep){
+    if(!keep)n=STEP;
     const g=gsel.value,a=asel.value,k=kw.value.trim();
     const hit=ps.filter(p=>(!g||p.genre===g)&&(!a||(p.author||'').trim()===a)
       &&(!k||(p.text||'').includes(k)||(p.title||'').includes(k)
          ||(p.lines||[]).join('').includes(k)||(p.images||[]).some(x=>x.includes(k))));
-    cnt.textContent=`共 ${ps.length} 首，当前显示 ${hit.length} 首`;
-    box.innerHTML=hit.map(p=>{
+    const part=hit.slice(0,n);
+    cnt.textContent=`共 ${ps.length} 首，当前筛得 ${hit.length} 首，已显示 ${part.length} 首`;
+    const html=part.map(p=>{
       const lines=(p.lines&&p.lines.length)?p.lines:[p.text||''];
       const body=lines.map(l=>`<div>${esc(l)}</div>`).join('');
       const img=(p.images||[]).map(x=>`<span class="tag">${esc(x)}</span>`).join('');
@@ -143,9 +147,15 @@ fetch('data/poems.json').then(r=>r.json()).then(ps=>{
         +(img?`<div>意象：${img}</div>`:'')
         +`<div class="small">句数 ${p.n_lines}　齐言 ${p.main_len}　`
         +`韵基一致率 ${(p.rhyme||0).toFixed(2)}　虚词率 ${(p.xu||0).toFixed(2)}</div>${st}</div>`;
-    }).join('')||'<p class="small">没有符合条件的诗词。</p>';
+    }).join('');
+    box.innerHTML=(html||'<p class="small">没有符合条件的诗词。</p>')
+      +(hit.length>part.length
+        ? `<div class="card small" style="text-align:center"><button id="moreBtn">`
+          +`再载 ${Math.min(STEP,hit.length-part.length)} 首（还有 ${hit.length-part.length} 首）</button></div>`:'');
+    const mb=document.getElementById('moreBtn');
+    if(mb)mb.onclick=()=>{n+=STEP;show(true);};
   }
-  gsel.onchange=show;asel.onchange=show;kw.oninput=show;show();
+  gsel.onchange=()=>show();asel.onchange=()=>show();kw.oninput=()=>show();show();
 });
 """
 
@@ -394,6 +404,9 @@ def export_data() -> None:
         for f in sorted(deb_dir.glob('*.json')):
             debates.append(json.loads(f.read_text(encoding='utf-8')))
     claims = db.q('SELECT * FROM claims')
+    # 发言数：辩题 → 轮次 → 发言，逐层点数（旧稿只点 claims 表，恒为 0，故首页误报）
+    speeches = sum(len(r.get('speeches') or [])
+                   for d in debates for r in (d.get('rounds') or []))
     (DATA / 'debates.json').write_text(
         json.dumps(dict(debates=debates, claims=claims), ensure_ascii=False),
         encoding='utf-8')
@@ -472,6 +485,7 @@ def export_data() -> None:
         allusions=db.q('SELECT COUNT(*) n FROM allusions')[0]['n'],
         mentions=db.q('SELECT COUNT(*) n FROM mentions')[0]['n'],
         claims=db.q('SELECT COUNT(*) n FROM claims')[0]['n'],
+        debates=len(debates), speeches=speeches,
         continuations=db.q('SELECT COUNT(*) n FROM continuations')[0]['n'],
         editions=db.analytic('edition_dist'),
         anno_top=db.analytic('anno_density', 8),
@@ -504,7 +518,8 @@ def build_site() -> Path:
 <div class="card">诗词 <big>{stats['poems']}</big> 首 · 意象 <big>{stats['imagery']}</big> 类</div>
 <div class="card">人物 <big>{stats['persons']}</big> · 地点 <big>{stats['places']}</big> · 物件 <big>{stats['objects']}</big></div>
 <div class="card">关系 <big>{stats['relations']}</big> 条 · 典故 <big>{stats['allusions']}</big> 条</div>
-<div class="card">推演发言 <big>{stats['claims']}</big> 条 · 续写 <big>{stats['continuations']}</big> 回</div>
+<div class="card">推演 <big>{stats['debates']}</big> 辩题 · 发言 <big>{stats['speeches']}</big> 条
+ · 续写 <big>{stats['continuations']}</big> 回</div>
 </div>
 <h2>脂批版本分布</h2><div class="card">{ed}</div>
 <h2>批语最密的回</h2><div class="card">
@@ -797,7 +812,10 @@ def build_site() -> Path:
             '<h2>续写</h2><div class="card small">续写由「曹雪芹」Agent 执笔，'
             '经文体门禁（句长、对话率、虚词率、现代词禁例）检验，'
             '再由「脂砚斋」批点。凡未通过门禁者自动重写一稿。</div>'
-            + (''.join(segs) or '<p class="small">尚无续写。</p>'))
+            + (''.join(segs) or '<div class="card small">续写尚未落笔。'
+               '上列骨架（第八十一回至第一百一十回的回目与要点）已由推演议定，'
+               '正文则须由「曹雪芹」Agent 逐回执笔、过文体门禁，再由「脂砚斋」批点，'
+               '故此处暂空——不是缺页，是尚未写到。</div>'))
     (SITE / 'continuation.html').write_text(
         _page('续写', body, 'continuation.html'), encoding='utf-8')
 
