@@ -174,6 +174,33 @@ def _owners(owner: str) -> list[str]:
     return out
 
 
+def _segments(owner: str) -> list[list[str]]:
+    """「贾母→薛宝琴」作两段：[[贾母], [薛宝琴]]。"""
+    return [_owners(seg) for seg in re.split(r'→|->', owner or '') if _owners(seg)]
+
+
+def _wearers(owner: str) -> list[str]:
+    """谁穿着——只取传承之链的最后一段。
+
+    旧法把链条上诸人一并计入，于是「贾母→宝玉」的雀金裘既记在宝玉身上，
+    又记在贾母身上，贾母遂有「七件衣裳而无一处服色」之怪。今只归受主。
+    """
+    segs = _segments(owner)
+    return segs[-1] if segs else []
+
+
+def _giver(owner: str) -> str:
+    """谁赐的——链条上除最后一段之外的首人；无赐则空。"""
+    segs = _segments(owner)
+    if len(segs) < 2:
+        return ''
+    return segs[0][0] if segs[0] else ''
+
+
+# 群像之称：不是一个人，却确是原文写定的一群人，不当硬分，亦不当丢弃
+GROUPS = {'众姊妹', '众人', '众丫鬟'}
+
+
 def _who(text: str, i: int, j: int) -> str:
     """衣裳归谁穿着（层层退守，务求其勿夺他人之衣）。
 
@@ -197,10 +224,15 @@ def _ctx(text: str, i: int, j: int) -> str:
 
 
 def _books() -> tuple[dict[int, str], dict[int, str]]:
+    """逐回文字。
+
+    底本按版心断行，一个名字常被行末的换行劈作两半（「水红绫子袄⏎儿」），
+    故先去换行，免得名物查无此人。
+    """
     main: dict[int, str] = {}
     for r in db.q('SELECT chapter, text FROM v_main WHERE chapter > 0 ORDER BY id'):
         main.setdefault(r['chapter'], '')
-        main[r['chapter']] += r['text'] or ''
+        main[r['chapter']] += (r['text'] or '').replace('\n', '').replace('\r', '')
     cont: dict[int, str] = {}
     try:
         rows = db.q('SELECT chapter, text FROM continuations ORDER BY chapter')
@@ -208,7 +240,7 @@ def _books() -> tuple[dict[int, str], dict[int, str]]:
         rows = []
     for r in rows:
         cont.setdefault(r['chapter'], '')
-        cont[r['chapter']] += r['text'] or ''
+        cont[r['chapter']] += (r['text'] or '').replace('\n', '').replace('\r', '')
     return main, cont
 
 
@@ -315,9 +347,13 @@ def build(dst: Path | None = None) -> Path:
     raw_wear: dict[str, Counter] = defaultdict(Counter)
     raw_fam: dict[str, Counter] = defaultdict(Counter)
     raw_act: Counter = Counter()
+    gifts: dict[str, Counter] = defaultdict(Counter)   # 赐衣者（贾母赐裘之类）
     for it in items:                       # 衣裳之主，由本体论写定，非出算法之猜度
+        giv = _giver(it['owner'])
         for h in it['hits']:
-            owners = _owners(it['owner'])
+            owners = _wearers(it['owner'])
+            if giv:
+                gifts[giv][it['name']] += 1
             for nm in (owners or ([h['who']] if h['who'] else [])):
                 raw_wear[nm][it['name']] += 1
     for c in colors:
@@ -328,18 +364,20 @@ def build(dst: Path | None = None) -> Path:
             raw_act[s_['who']] += 1
 
     def _merge(raw) -> dict[str, Counter]:
-        """归本名（宝玉→贾宝玉），并剔除「众姊妹」等非人名。"""
+        """归本名（宝玉→贾宝玉）；「众姊妹」一类群像之称另置，不并入个人。"""
         out: dict[str, Counter] = defaultdict(Counter)
         for nm, c in raw.items():
             cn = _canon(nm)
-            if cn in known:
+            if cn in known or cn in GROUPS:
                 out[cn].update(c)
         return out
 
     p_wear = _merge(raw_wear)
     p_fam = _merge(raw_fam)
     p_act = Counter({_canon(k): v for k, v in raw_act.items()
-                     if _canon(k) in known})
+                     if _canon(k) in known or _canon(k) in GROUPS})
+    p_gift = {k: sum(v.values()) for k, v in sorted(
+        gifts.items(), key=lambda kv: -sum(kv[1].values()))}
     persons = []
     for nm in sorted({*p_wear, *p_fam}):
         w, f = p_wear.get(nm, Counter()), p_fam.get(nm, Counter())
@@ -347,12 +385,14 @@ def build(dst: Path | None = None) -> Path:
         if not sum(w.values()) and not sum(f.values()) and not acts:
             continue
         top_fam = f.most_common(1)[0][0] if f else ''
-        persons.append(dict(name=nm, goods=sum(w.values()), colors=sum(f.values()),
-                            acts=acts, top=top_fam,
+        # goods 计「件」：去重后的名物件数；现身处数另记于 hits
+        persons.append(dict(name=nm, goods=len(w), hits=sum(w.values()),
+                            colors=sum(f.values()),
+                            acts=acts, top=top_fam, grp=1 if nm in GROUPS else 0,
                             fams=[[k, f[k]] for k, _ in f.most_common()],
                             items=[[k, w[k]] for k, _ in w.most_common(6)]))
     persons.sort(key=lambda p: (-(p['acts'] + p['colors']), p['name']))
-    persons = persons[:18]
+    persons = persons[:24]
 
     # ---- 五・第四十九回雪地群像
     #      这一回各人分什么衣裳，本体论里已按原文写定 owner（非由算法猜测）；
@@ -397,10 +437,13 @@ def build(dst: Path | None = None) -> Path:
               for c in colors if c['src'] == '续' and c['fam'] == 'red']
 
     # ---- 八・续写接住了几件（未接者即「待接之衣」）
-    picked = [it['name'] for it in items if it['n_xu']]
-    owed = [dict(name=it['name'], owner=it['owner'], symbol=it['symbol'],
-                 cat=it['cat'], ch=it['first'])
-            for it in items if not it['n_xu']]
+    #      若续写三十回尚未落笔，则「待接」无从核起，宁缺而勿虚张其数
+    xu_empty = not cont
+    picked = [] if xu_empty else [it['name'] for it in items if it['n_xu']]
+    owed = [] if xu_empty else [
+        dict(name=it['name'], owner=it['owner'], symbol=it['symbol'],
+             cat=it['cat'], ch=it['first'])
+        for it in items if not it['n_xu']]
 
     stats = dict(items=len(items), hits=sum(it['n'] for it in items),
                  chaps=len({h['ch'] for it in items for h in it['hits']}),
@@ -412,7 +455,8 @@ def build(dst: Path | None = None) -> Path:
                  dens_main=_dens('书'), dens_xu=_dens('续'),
                  top_ch=max((s for s in series if s['src'] == '书'),
                             key=lambda s: s['dens'], default={'ch': 0})['ch'],
-                 picked=picked, owed=len(owed),
+                 picked=picked, owed=len(owed), xu_empty=xu_empty,
+                 gifts=p_gift,
                  fam_main=[[f['key'], fam_main.get(f['key'], 0)] for f in FAMILIES],
                  fam_xu=[[f['key'], fam_xu.get(f['key'], 0)] for f in FAMILIES],
                  n_main=sum(fam_main.values()), n_xu=sum(fam_xu.values()),
@@ -420,7 +464,7 @@ def build(dst: Path | None = None) -> Path:
                  cats=[[c, sum(1 for it in items if it['cat'] == c)] for c in CATS])
 
     doc = dict(items=items, colors=colors, series=series, segs=segs, scenes=scenes,
-               persons=persons, ch49=ch49, owed=owed, stats=stats,
+               persons=persons, ch49=ch49, owed=owed, stats=stats, gifts=p_gift,
                fams=[[f['key'], f['name'], f['color']] for f in FAMILIES],
                cats=CATS,
                colors_cat=CAT_COLOR)
@@ -454,6 +498,7 @@ BODY = """
 <b>贾母赐衣即是赐分数</b>：赐予琴儿一件凫靥裘，众人便知老太太疼谁；岫烟一人无氅，不必再说一句穷字。
 </p>
 </div>
+<div class="card small" id="cosgifts"></div>
 <div class="gwrap">
   <div class="card samples" id="cos49"></div>
   <aside class="card gside" id="cos49side"><p class="small">点一行看原文与托意。</p></aside>
@@ -497,7 +542,7 @@ BODY = """
 </div>
 
 <h2>续写的服色 · 三十回里再没有一笔新的红</h2>
-<div class="card small">
+<div class="card small" id="cosxunote">
 续写三十回里，明写「穿／披／换／脱」的只有三处：第八十一回「换衣整洁」、
 第八十五回若兰「换上了射衣」、第一百五回湘莲「脱了绫罗，换了布衣」——
 <b>而且都不是为着好看</b>，是为了告别。
@@ -559,7 +604,9 @@ function people(){
   let s='';
   D.persons.forEach((p,i)=>{
     const y=10+i*rowH, tot=p.fams.reduce((a,f)=>a+f[1],0)||1;
-    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 fill="#3a322a" font-family="serif">${esc(p.name)}</text>`;
+    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 `
+      +`fill="${p.grp?'#9e2b25':'#3a322a'}" font-family="serif">`
+      +`${esc(p.name)}${p.grp?'（群像）':''}</text>`;
     let x=PL;
     p.fams.forEach(f=>{
       const w=(f[1]/tot)*(W-PL-PR);
@@ -568,7 +615,8 @@ function people(){
       x+=w;
     });
     s+=`<text x=${W-PR+6} y=${y+rowH/2+4} font-size=11 fill="#8a7f6d" font-family="serif">`
-      +`${p.goods} 件 / ${p.colors} 色　主色 ${esc(FM[p.top]?FM[p.top].name:'—')}</text>`;
+      +`${p.goods} 件（现身 ${p.hits} 处）/ ${p.colors} 色　主色 `
+      +`${esc(FM[p.top]?FM[p.top].name:'—')}</text>`;
   });
   $('cosperson').innerHTML=s;
   $('cosperson').querySelectorAll('rect').forEach(el=>el.onclick=()=>{
@@ -586,7 +634,8 @@ function chips(){
 
 function side(p,k){
   const goods=D.items.filter(it=>it.hits.some(h=>h.who===p.name));
-  let h=`<h3>${esc(p.name)}</h3><p class="small">身上名物 ${p.goods} 处 · 服色 ${p.colors} 处`;
+  let h=`<h3>${esc(p.name)}</h3><p class="small">身上名物 ${p.goods} 件`
+    +`（现身 ${p.hits||0} 处）· 服色 ${p.colors} 处`;
   if(k) h+=` · 点看 ${esc(FM[k].name)}`;
   h+=`</p>`;
   const cs=D.colors.filter(c=>c.who===p.name&&(!k||c.fam===k)).slice(0,12);
@@ -680,6 +729,11 @@ function item(it){
 
 function xu(){
   const s=D.stats, pc=(n,t)=>t?Math.round(n/t*100):0;
+  if(s.xu_empty){
+    $('cosxunote').innerHTML='推演三十回（八十一回以下）<b>此刻尚未落笔</b>，库中无续写正文，'
+      +'故此节的两相对照无从核起。下面一表只剩脂本一侧之数，续写一侧皆为零，'
+      +'<b>不可读作「续写里没有红」</b>——只是尚未写而已。';
+  }
   $('cosxutab').innerHTML=`<thead><tr><th>色系</th>`
     +`<th>脂本前八十回（${s.n_main} 处）</th><th>续写三十回（${s.n_xu} 处）</th></tr></thead><tbody>`
     +D.fams.map(f=>{
@@ -695,8 +749,24 @@ function xu(){
     :'<p class="small">续写三十回里，一处也没有。</p>');
 }
 
+function gifts(){
+  const g=D.gifts||{}, s=D.stats;
+  const ks=Object.keys(g);
+  $('cosgifts').innerHTML='<b>赐衣者</b>　衣裳在贾府是分数之赐，谁赐谁受，皆见原文：'
+    + (ks.length? ks.map(k=>`${esc(k)} <span class="tag">赐出 ${g[k]} 处</span>`).join('　')
+        : '<span class="small">本体论所录名物中尚无可考的赐授。</span>')
+    + '<br><span class="small">（件数按该名物在正文现身的处数计，非去重之数）</span>';
+}
+
 function owed(){
   const s=D.stats;
+  if(s.xu_empty){
+    $('cosowedsum').innerHTML='推演三十回（八十一回以下）<b>此刻尚未落笔</b>，'
+      +'库中无一段续写正文可核，故「续写接住了几件」与「待接之衣」<b>皆暂不作数</b>。'
+      +'待续写出来，构建时自会照单核去。';
+    $('cosowed').innerHTML='<p class="small">续写未落笔，无从核起。</p>';
+    return;
+  }
   $('cosowedsum').innerHTML='脂本前八十回记<b>衣事 '+s.scenes_main+' 处</b>'
     +`（每千字 ${s.dens_main} 处），续写三十回只有 <b>${s.scenes_xu} 处</b>`
     +`（每千字 ${s.dens_xu} 处）；录入的 ${s.items} 件名物，续写接住 `
@@ -711,7 +781,7 @@ function owed(){
 
 fetch('data/costume.json').then(r=>r.json()).then(d=>{
   D=d;FM=FAM(D);
-  cards();ch49();people();chips();series();segs();list();xu();owed();
+  cards();ch49();gifts();people();chips();series();segs();list();xu();owed();
   $('cDens').onclick=()=>{MODE='dens';$('cDens').classList.add('on');$('cAbs').classList.remove('on');series();};
   $('cAbs').onclick=()=>{MODE='abs';$('cAbs').classList.add('on');$('cDens').classList.remove('on');series();};
 });

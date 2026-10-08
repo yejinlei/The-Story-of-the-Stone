@@ -729,12 +729,15 @@ def build_site() -> Path:
 
     # ---------- costume（衣冠谱）
     cs_stats = json.loads((DATA / 'costume.json').read_text(encoding='utf-8'))['stats']
+    cs_xu = ('其中被本次续写接住的，只 <b>%d</b> 件，尚有 <b>%d</b> 件待接。'
+             % (len(cs_stats['picked']), cs_stats['owed'])
+             if not cs_stats.get('xu_empty') else
+             '推演三十回尚未落笔，故「待接之衣」暂不作数。')
     cos_body = costume.BODY.replace(
         '<div class="grid" id="cos-cards"></div>',
         f'<div class="card small">已录 <b>{cs_stats["items"]}</b> 件衣冠，'
         f'正文共现身 <b>{cs_stats["hits"]}</b> 处，涉及 <b>{cs_stats["chaps"]}</b> 回；'
-        f'其中被本次续写接住的，只 <b>{len(cs_stats["picked"])}</b> 件，'
-        f'尚有 <b>{cs_stats["owed"]}</b> 件待接。</div>'
+        f'{cs_xu}</div>'
         '<div class="grid" id="cos-cards"></div>')
     (SITE / 'costume.html').write_text(
         _page('衣冠', cos_body, 'costume.html', costume.JS), encoding='utf-8')

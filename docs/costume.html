@@ -20,7 +20,7 @@
 <b>不为修辞上的好看夸张半分</b>：色字只有在衣裳、缎绫等字的一十四字之内才算「服色」，
 人名只取离它最近的那一个——换言之，此页所呈现的一切冷暖浓淡，都是可用原句复核的。
 </div>
-<div class="card small">已录 <b>30</b> 件衣冠，正文共现身 <b>36</b> 处，涉及 <b>7</b> 回；其中被本次续写接住的，只 <b>0</b> 件，尚有 <b>30</b> 件待接。</div><div class="grid" id="cos-cards"></div>
+<div class="card small">已录 <b>97</b> 件衣冠，正文共现身 <b>171</b> 处，涉及 <b>51</b> 回；推演三十回尚未落笔，故「待接之衣」暂不作数。</div><div class="grid" id="cos-cards"></div>
 
 <h2>只一斗篷 · 第四十九回的雪地群像</h2>
 <div class="card">
@@ -35,6 +35,7 @@
 <b>贾母赐衣即是赐分数</b>：赐予琴儿一件凫靥裘，众人便知老太太疼谁；岫烟一人无氅，不必再说一句穷字。
 </p>
 </div>
+<div class="card small" id="cosgifts"></div>
 <div class="gwrap">
   <div class="card samples" id="cos49"></div>
   <aside class="card gside" id="cos49side"><p class="small">点一行看原文与托意。</p></aside>
@@ -78,7 +79,7 @@
 </div>
 
 <h2>续写的服色 · 三十回里再没有一笔新的红</h2>
-<div class="card small">
+<div class="card small" id="cosxunote">
 续写三十回里，明写「穿／披／换／脱」的只有三处：第八十一回「换衣整洁」、
 第八十五回若兰「换上了射衣」、第一百五回湘莲「脱了绫罗，换了布衣」——
 <b>而且都不是为着好看</b>，是为了告别。
@@ -143,7 +144,9 @@ function people(){
   let s='';
   D.persons.forEach((p,i)=>{
     const y=10+i*rowH, tot=p.fams.reduce((a,f)=>a+f[1],0)||1;
-    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 fill="#3a322a" font-family="serif">${esc(p.name)}</text>`;
+    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 `
+      +`fill="${p.grp?'#9e2b25':'#3a322a'}" font-family="serif">`
+      +`${esc(p.name)}${p.grp?'（群像）':''}</text>`;
     let x=PL;
     p.fams.forEach(f=>{
       const w=(f[1]/tot)*(W-PL-PR);
@@ -152,7 +155,8 @@ function people(){
       x+=w;
     });
     s+=`<text x=${W-PR+6} y=${y+rowH/2+4} font-size=11 fill="#8a7f6d" font-family="serif">`
-      +`${p.goods} 件 / ${p.colors} 色　主色 ${esc(FM[p.top]?FM[p.top].name:'—')}</text>`;
+      +`${p.goods} 件（现身 ${p.hits} 处）/ ${p.colors} 色　主色 `
+      +`${esc(FM[p.top]?FM[p.top].name:'—')}</text>`;
   });
   $('cosperson').innerHTML=s;
   $('cosperson').querySelectorAll('rect').forEach(el=>el.onclick=()=>{
@@ -170,7 +174,8 @@ function chips(){
 
 function side(p,k){
   const goods=D.items.filter(it=>it.hits.some(h=>h.who===p.name));
-  let h=`<h3>${esc(p.name)}</h3><p class="small">身上名物 ${p.goods} 处 · 服色 ${p.colors} 处`;
+  let h=`<h3>${esc(p.name)}</h3><p class="small">身上名物 ${p.goods} 件`
+    +`（现身 ${p.hits||0} 处）· 服色 ${p.colors} 处`;
   if(k) h+=` · 点看 ${esc(FM[k].name)}`;
   h+=`</p>`;
   const cs=D.colors.filter(c=>c.who===p.name&&(!k||c.fam===k)).slice(0,12);
@@ -264,6 +269,11 @@ function item(it){
 
 function xu(){
   const s=D.stats, pc=(n,t)=>t?Math.round(n/t*100):0;
+  if(s.xu_empty){
+    $('cosxunote').innerHTML='推演三十回（八十一回以下）<b>此刻尚未落笔</b>，库中无续写正文，'
+      +'故此节的两相对照无从核起。下面一表只剩脂本一侧之数，续写一侧皆为零，'
+      +'<b>不可读作「续写里没有红」</b>——只是尚未写而已。';
+  }
   $('cosxutab').innerHTML=`<thead><tr><th>色系</th>`
     +`<th>脂本前八十回（${s.n_main} 处）</th><th>续写三十回（${s.n_xu} 处）</th></tr></thead><tbody>`
     +D.fams.map(f=>{
@@ -279,8 +289,24 @@ function xu(){
     :'<p class="small">续写三十回里，一处也没有。</p>');
 }
 
+function gifts(){
+  const g=D.gifts||{}, s=D.stats;
+  const ks=Object.keys(g);
+  $('cosgifts').innerHTML='<b>赐衣者</b>　衣裳在贾府是分数之赐，谁赐谁受，皆见原文：'
+    + (ks.length? ks.map(k=>`${esc(k)} <span class="tag">赐出 ${g[k]} 处</span>`).join('　')
+        : '<span class="small">本体论所录名物中尚无可考的赐授。</span>')
+    + '<br><span class="small">（件数按该名物在正文现身的处数计，非去重之数）</span>';
+}
+
 function owed(){
   const s=D.stats;
+  if(s.xu_empty){
+    $('cosowedsum').innerHTML='推演三十回（八十一回以下）<b>此刻尚未落笔</b>，'
+      +'库中无一段续写正文可核，故「续写接住了几件」与「待接之衣」<b>皆暂不作数</b>。'
+      +'待续写出来，构建时自会照单核去。';
+    $('cosowed').innerHTML='<p class="small">续写未落笔，无从核起。</p>';
+    return;
+  }
   $('cosowedsum').innerHTML='脂本前八十回记<b>衣事 '+s.scenes_main+' 处</b>'
     +`（每千字 ${s.dens_main} 处），续写三十回只有 <b>${s.scenes_xu} 处</b>`
     +`（每千字 ${s.dens_xu} 处）；录入的 ${s.items} 件名物，续写接住 `
@@ -295,7 +321,7 @@ function owed(){
 
 fetch('data/costume.json').then(r=>r.json()).then(d=>{
   D=d;FM=FAM(D);
-  cards();ch49();people();chips();series();segs();list();xu();owed();
+  cards();ch49();gifts();people();chips();series();segs();list();xu();owed();
   $('cDens').onclick=()=>{MODE='dens';$('cDens').classList.add('on');$('cAbs').classList.remove('on');series();};
   $('cAbs').onclick=()=>{MODE='abs';$('cAbs').classList.add('on');$('cDens').classList.remove('on');series();};
 });
