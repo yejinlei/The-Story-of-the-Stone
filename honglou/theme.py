@@ -185,6 +185,16 @@ pre{{white-space:pre-wrap;font-family:var(--kai);font-size:14.5px;margin:6px 0 0
 .gside .kv td{{border-bottom:1px dotted #e9ddc7;padding:3px 5px 3px 0;
   background:none!important;font-size:13px}}
 .gside .kv td:first-child{{color:var(--ink3);white-space:nowrap;width:5.4em}}
+/* 时序同轴 · 泳道 */
+.tlbars{{display:grid;grid-template-columns:96px 1fr;align-items:start}}
+.tlnames{{border-right:1px solid var(--line);padding-top:0;
+  position:sticky;left:0;background:linear-gradient(90deg,#fffdf8,#fffdf8)}}
+.tlnames div{{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--ink);letter-spacing:.02em}}
+.tlscroll{{overflow-x:auto;overflow-y:hidden;padding-bottom:4px}}
+.tlscroll svg{{display:block;border-radius:2px;background:linear-gradient(180deg,#fffdf8,#fbf5e9)}}
+.tlscroll svg circle{{transition:fill-opacity .12s}}
+.tlscroll svg circle:hover{{fill-opacity:1;stroke:#9e2b25;stroke-width:1.6}}
 .legend{{display:flex;flex-wrap:wrap;gap:3px 13px;margin:8px 0 2px;font-size:12.5px;
   color:var(--ink2)}}
 .legend i{{display:inline-block;width:9px;height:9px;border-radius:50%;

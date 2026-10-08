@@ -35,8 +35,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from . import (annotators, calendar, climate, costume, cuisine, db, garden,
-               graph, imagery, mirror, money, paths, relics, theme, tree,
-               versions)
+               graph, imagery, mirror, money, paths, relics, theme, timeline,
+               tree, versions)
 from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
@@ -348,6 +348,7 @@ def export_data() -> None:
         relations=db.q('SELECT * FROM relations'),
         festivals=db.q('SELECT * FROM festivals ORDER BY id'),
         lost_clues=db.q('SELECT * FROM lost_clues ORDER BY id'),
+        puns=db.q('SELECT * FROM puns'),
     )
     (DATA / 'entities.json').write_text(
         json.dumps(ents, ensure_ascii=False), encoding='utf-8')
@@ -418,6 +419,9 @@ def export_data() -> None:
 
     # --- 岁时行事（环形年历与节日复沓，见 honglou/calendar.py）
     calendar.build(DATA)
+
+    # --- 时序同轴（泳道时间轴与事件本体，见 honglou/timeline.py）
+    timeline.build(DATA)
 
     # --- 食单与茶酒谱（名物逐回钩沉，见 honglou/cuisine.py）
     cuisine.build(DATA)
@@ -594,8 +598,11 @@ def build_site() -> Path:
     ents = json.loads((DATA / 'entities.json').read_text(encoding='utf-8'))
     hot = json.loads((DATA / 'mentions.json').read_text(encoding='utf-8'))
     hotmap = {h['person']: h['total'] for h in hot}
+    punmap = {p['name']: p for p in ents.get('puns', [])}
     rows = ''.join(
-        f"<tr><td><b>{p['name']}</b></td><td>{p['role']}</td><td>{p['residence']}</td>"
+        f"<tr><td><b>{p['name']}</b></td>"
+        f"<td>{punmap.get(p['name'], {}).get('pun', '—')}</td>"
+        f"<td>{p['role']}</td><td>{p['residence']}</td>"
         f"<td>{p['qingbang'] or '—'}</td><td>{p['fate'] or '—'}</td>"
         f"<td>{hotmap.get(p['name'], 0)}</td></tr>"
         for p in ents['persons'])
@@ -620,9 +627,18 @@ def build_site() -> Path:
                     for c in ents['lost_clues'])
     fest = ''.join(f"<tr><td>{f['chapter']}</td><td>{f['solar_term']}</td><td>{f['event']}</td></tr>"
                    for f in ents['festivals'])
+    puns = ents.get('puns', [])
+    punrows = ''.join(
+        f"<tr><td><b>{p['name']}</b></td><td>{p['pun']}</td><td>{p['gloss']}</td>"
+        f"<td>{p['category']}</td><td class='small'>{p['note']}</td></tr>"
+        for p in puns)
     body = f"""
 <h2>人物（按提及热度）</h2>
-<table><tr><th>姓名</th><th>身份</th><th>居所</th><th>情榜</th><th>探佚结局</th><th>提及</th></tr>{rows}</table>
+<table><tr><th>姓名</th><th>谐音</th><th>身份</th><th>居所</th><th>情榜</th><th>探佚结局</th><th>提及</th></tr>{rows}</table>
+<h2>谐音双关谱（人物与地名之命名寓意）</h2>
+<p class="small">曹雪芹好用谐音藏谶：人名即判词，地名即注脚。凡按语末标「疑」者，
+为后世通行而脂批未明之解，存而不论。</p>
+<table><tr><th>名目</th><th>谐音</th><th>所指</th><th>类别</th><th>按语</th></tr>{punrows}</table>
 <h2>地点</h2><table><tr><th>名称</th><th>类别</th><th>所属</th><th>说明</th></tr>{places}</table>
 <h2>物件</h2><table><tr><th>名称</th><th>持有者</th><th>类别</th><th>象征/谶应</th></tr>{objs}</table>
 <h2>概念与笔法</h2><table><tr><th>名称</th><th>类别</th><th>释义</th></tr>{cons}</table>
@@ -699,9 +715,10 @@ def build_site() -> Path:
     (SITE / 'relics.html').write_text(
         _page('物色', relics.BODY, 'relics.html', relics.JS), encoding='utf-8')
 
-    # ---------- calendar（岁时行事）
+    # ---------- calendar（岁时行事 + 时序同轴泳道）
     (SITE / 'calendar.html').write_text(
-        _page('岁时', calendar.BODY, 'calendar.html', calendar.JS),
+        _page('岁时', calendar.BODY + timeline.BODY, 'calendar.html',
+              calendar.JS + timeline.JS),
         encoding='utf-8')
 
     # ---------- cuisine（食单与茶酒谱）

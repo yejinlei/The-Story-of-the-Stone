@@ -28,6 +28,61 @@
 </div>
 <h2>行事一览</h2>
 <div class="card"><table id="ftab"></table></div>
+
+<h2>时序同轴 · 谁在这一回做什么</h2>
+<div class="card small">
+《红楼》从不写干支年月日，只写「次日」「这日」「一时」——所以<b>「同一时间」要靠自己拼</b>。
+这里把八十回正文按书场标记（且说、次日、这日、话说……）切成一幕一幕，
+判明每幕有谁<b>真的在场有言语动作</b>（不是被旁人提起），就此排成泳道：
+<b>横轴是回次与场内次第，纵轴是人物，一个点就是一条故事实</b>，点开有原文可е核实。
+点上端回次，可见该回所有人各自的营生；点左边人名，则只看这一人的行迹。
+</div>
+<div class="card gtools">
+  <span class="small">泳道</span>
+  <button class="tlbtn on" data-n="10">十人</button>
+  <button class="tlbtn" data-n="16">十六人</button>
+  <button class="tlbtn" data-n="30">三十人</button>
+  <button class="tlbtn" data-n="99">全部</button>
+  <span class="small" style="margin-left:10px">类目</span>
+  <span id="tlchips"></span>
+  <button id="tlcont">含推演三十回</button>
+  <span class="gstat" id="tlstat"></span>
+</div>
+<div class="card"><div class="tlbars">
+  <div class="tlnames" id="tlnames"></div>
+  <div class="tlscroll"><svg id="tl" xmlns="http://www.w3.org/2000/svg"></svg></div>
+</div></div>
+<div class="gwrap">
+  <div class="card small" id="tlnote"></div>
+  <aside class="card gside" id="tlside"><p class="small">点一个点，或点上端回次。</p></aside>
+</div>
+
+<h2>事件本体 · 十六类目光 mgbdating</h2>
+<div class="card small">
+类目是自制的一把尺：每条故事实据本人所在句子的标志词定类，取最重者，规则可复算。
+下表诸类的事件数，即八十回（加推演三十回）里这种事的疏密。
+</div>
+<div class="card"><table id="tltype"></table></div>
+
+<h2>锚点事件 · 人工著录而以书核之</h2>
+<div class="card small">
+以下几桩大事由人工著录，构建时拿原书去重查：条本次活动券核验词须在<b>正文或回目里真的出现</b>，
+验不中的一律不显示。点一格即跳到该回，看当时谁在做什么。
+</div>
+<div class="card"><table id="tlanchor"></table></div>
+
+<h2>推算与局限</h2>
+<div class="card small">
+一・<b>场景</b>由书场标记切分，最粗不过一千字；用底本（脂评汇校本）原文的标点。<br>
+二・<b>在场之判</b>用「名字近处有动词或引语」这一条粗法。旁人闲话中提到的名字、以及
+叙事者提及的名义人物，仍有混入的可能，不可谓丝毫无误。<br>
+三・<b>季节</b>是数出来的：先剔去「迎春」「探春」一类人名，再数春夏秋冬及其助詞。
+「算出时节」不等于「作者写明时节」。<br>
+四・<b>年关分段</b>只据元宵、除夕、腊月一类词聚簇，簇后进为下一段。
+它标记的是叙事节奏的顿挫，不可当历元用。<br>
+五・推演三十回（第八十一至一一〇回）是本工程 AI 依脂批线索续写，附录以见後事之走向，
+<b>与前十回不同科</b>，不可与八十回原文等量齐观。
+</div>
 </main>
 <footer>
   <span class="seal">脂本</span>
@@ -109,4 +164,208 @@ fetch('data/calendar.json').then(r=>r.json()).then(d=>{
   $('notes').innerHTML=Object.keys(D.notes).filter(k=>D.repeats[k]).map(k=>
     `<div style="margin-bottom:10px"><h3>${esc(k)}</h3><p>${esc(D.notes[k])}</p></div>`).join('');
 });
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null, LANES=16, CONT=false, SELTYPE=null, FOCUS=null, EV=[];
+const LANEH=32, AXH=56, LEFT=8, STEP=26;
+
+const SEACOL={春:'rgba(120,160,110,.16)',夏:'rgba(190,120,90,.13)',
+              秋:'rgba(180,150,70,.15)',冬:'rgba(110,140,180,.14)'};
+
+function tPair(ev){return [D.types[ev.y], D.lanes[ev.p]];}
+
+function visible(){
+  const lanes=D.lanes.slice(0,Math.min(LANES,D.lanes.length));
+  const ok=new Set(lanes.map(l=>l.name));
+  EV=D.events.filter(e=>ok.has(D.lanes[e.p].name))
+    .filter(e=>CONT||!e.c)
+    .filter(e=>SELTYPE==null||D.types[e.y].name===SELTYPE)
+    .filter(e=>!FOCUS||D.lanes[e.p].name===FOCUS);
+  return lanes.filter(l=>!FOCUS||l.name===FOCUS);
+}
+
+function draw(lanes){
+  const maxCh=CONT?(D.meta.cont||80):(D.meta.base||80);
+  const minCh=1, W=LEFT*2+(maxCh-minCh+1)*STEP, H=AXH+lanes.length*LANEH;
+  const X=t=>LEFT+(t-minCh)*STEP+STEP/2;
+  const svg=$('tl');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  const row=i=>AXH+i*LANEH+LANEH/2;
+  let g='';
+  // 季节带
+  (D.times||[]).forEach(tm=>{
+    if(tm.ch>maxCh||tm.ch<minCh)return;
+    const x0=LEFT+(tm.ch-minCh)*STEP, c=SEACOL[tm.season]||'rgba(0,0,0,0)';
+    g+=`<rect x=${x0} y=${AXH} width=${STEP} height=${lanes.length*LANEH} fill="${c}"/>`;
+  });
+  // 回次栅格与上端
+  for(let ch=minCh;ch<=maxCh;ch++){
+    const x=LEFT+(ch-minCh)*STEP+STEP/2, ist=ch%5===0||ch===minCh;
+    g+=`<line x1=${x} y1=${AXH} x2=${x} y2=${AXH+lanes.length*LANEH} `
+      +`stroke="${ist?'#ddd0b4':'#efe6d3'}" stroke-width="1"/>`;
+    if(ist) g+=`<text x=${x} y=${AXH-30} text-anchor="middle" font-size=12 `
+      +`fill="#5d5449">${ch}</text>`;
+    const tm=(D.times||[]).find(t=>t.ch===ch);
+    if(tm&&tm.season) g+=`<text x=${x} y=${AXH-14} text-anchor="middle" font-size=11 `
+      +`fill="#8a7f6d">${esc(tm.season)}</text>`;
+    if(tm&&tm.term) g+=`<text x=${x} y=${AXH-2} text-anchor="middle" font-size=10 `
+      +`fill="#9e2b25">${esc(tm.term.slice(0,2))}</text>`;
+    g+=`<rect x=${x-STEP/2} y=0 width=${STEP} height=${AXH-34} fill="transparent" `
+      +`data-ch="${ch}" style="cursor:pointer"/>`;
+  }
+  $('tlside').dataset.x=maxCh;
+  // 前八十回与推演的分界
+  if(CONT&&maxCh>80){
+    const x=LEFT+(80-minCh)*STEP+STEP;
+    g+=`<line x1=${x} y1=0 x2=${x} y2=${H} stroke="#9e2b25" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+    g+=`<text x=${x+5} y=14 font-size=11 fill="#9e2b25">以下推演</text>`;
+  }
+  // 锚点事件：上端朱笔三角志之
+  (D.anchors||[]).forEach(a=>{
+    if(a.ch>maxCh)return;
+    const x=LEFT+(a.ch-minCh)*STEP+STEP/2;
+    g+=`<path d="M${x-4} 1 L${x+4} 1 L${x} 8 Z" fill="#9e2b25" opacity=".8" data-a="${a.ch}"/>`
+      +`<text x=${x} y=8 font-size=9 fill="#9e2b25" text-anchor="middle" `
+      +`transform="rotate(-90 ${x} 8)" pointer-events="none" style="cursor:pointer">`
+      +`</text>`;
+  });
+  // 泳道横线
+  lanes.forEach((l,i)=>{
+    g+=`<line x1=${LEFT} y1=${row(i)} x2=${W-LEFT} y2=${row(i)} stroke="#f2e9d6" stroke-width="1"/>`;
+  });
+  // 故事实
+  EV.forEach(e=>{
+    const i=lanes.findIndex(l=>l.name===D.lanes[e.p].name); if(i<0)return;
+    const t=D.types[e.y], y=row(i), x=X(e.t), r=Math.min(6,3+Math.sqrt(e.n||1));
+    g+=`<circle cx=${x.toFixed(1)} cy=${y} r=${r.toFixed(1)} fill="${t.color}" `
+      +`fill-opacity="${e.c?.5:.82}" stroke="${e.c?t.color:'#fffdf8'}" stroke-width="1" `
+      +`data-e="${e.i}" style="cursor:pointer"><title>${esc(D.lanes[e.p].name)}　`
+      +`${esc(e.a)}${e.pl?'　'+esc(e.pl):''}</title></circle>`;
+  });
+  svg.innerHTML=g;
+  svg.querySelectorAll('[data-e]').forEach(el=>el.onclick=()=>{
+    const ev=D.events.find(x=>x.i===+el.dataset.e); if(ev)panel(ev);});
+  svg.querySelectorAll('[data-ch]').forEach(el=>el.onclick=()=>{
+    chapter(+el.dataset.ch);});
+}
+
+function names(lanes){
+  $('tlnames').innerHTML=`<div style="height:${AXH}px"></div>`
+    +lanes.map(l=>`<div style="height:${LANEH}px;line-height:${LANEH}px;text-align:right;`
+      +`padding-right:8px;font-size:13px;cursor:pointer;color:`
+      +`${FOCUS===l.name?'#9e2b25':'#4a4438'}">${esc(l.name)}</div>`).join('');
+  $('tlnames').querySelectorAll('div').forEach((el,i)=>{
+    if(i===0)return;
+    el.onclick=()=>{const l=lanes[i-1];FOCUS=(FOCUS===l.name?null:l.name);render();};});
+}
+
+function chips(){
+  const counts={}; D.events.forEach(e=>{counts[D.types[e.y].name]=(counts[D.types[e.y].name]||0)+1;});
+  const all=`<span class="nb" id="chipall">全部</span>`;
+  const rest=D.types.map(t=>`<span class="nb" data-t="${esc(t.name)}" style="border-color:${
+    SELTYPE===t.name?'#9e2b25':'#e0d5bd'};color:${SELTYPE===t.name?'#9e2b25':'#5d5449'}">`
+    +`<i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${
+      t.color};margin-right:4px"></i>${esc(t.name)} ${counts[t.name]||0}</span>`).join('');
+  const box=$('tlchips'); box.innerHTML=all+rest;
+  const ca=$('chipall');
+  ca.style.borderColor=SELTYPE?'#e0d5bd':'#9e2b25';
+  ca.style.color=SELTYPE?'#5d5449':'#9e2b25';
+  ca.onclick=()=>{SELTYPE=null;render();};
+  box.querySelectorAll('[data-t]').forEach(el=>el.onclick=()=>{
+    SELTYPE=(SELTYPE===el.dataset.t?null:el.dataset.t); render();});
+}
+
+function render(){
+  const lanes=visible();
+  names(lanes); draw(lanes); chips();
+  const per=(D.times||[]).slice(0,CONT?undefined:80);
+  $('tlstat').textContent=`${EV.length} 条故事实 · ${lanes.length} 条泳道 · `
+    +`${per.length} 回 · ${D.meta.scenes} 幕`;
+}
+
+function panel(e){
+  const t=D.types[e.y], l=D.lanes[e.p];
+  const tm=(D.times||[]).find(x=>x.ch===e.ch)||{};
+  const same=D.events.filter(x=>x.sid===e.sid&&x.p!==e.p)
+    .map(x=>D.lanes[x.p].name).filter((v,i,a)=>a.indexOf(v)===i);
+  let h=`<h3>${esc(l.name)} <span class="small">${esc(l.role||'')}</span></h3>`
+   +`<table class="kv"><tr><td>回次</td><td>第${e.ch}回 ${esc(tm.title||'')}</td></tr>`
+   +`<tr><td>推算之时</td><td>${esc(e.se||'—')}·第 ${e.ep} 段`
+   +`${tm.term?'·'+esc(tm.term):''}</td></tr>`
+   +`<tr><td>类目</td><td><span style="color:${t.color}">${esc(t.name)}</span>`
+   +`　${esc(t.gloss||'')}</td></tr>`
+   +`<tr><td>行事</td><td>${esc(e.a)}</td></tr>`
+   +`<tr><td>地点</td><td>${esc(e.pl||'—')}</td></tr>`
+   +`<tr><td>渊源</td><td>${e.c?'AI 推演':'八十回原文'}　出现 ${e.n} 次</td></tr></table>`
+   +`<p class="small" style="margin:8px 0 0">【原文】${esc(e.q)}</p>`;
+  if(e.ti) h+=`<p class="small">【本幕】${esc(e.ti)}</p>`;
+  if(same.length) h+=`<p class="small">同幕在场：`
+    +same.map(n=>`<span class="nb" data-p="${esc(n)}">${esc(n)}</span>`).join('')+`</p>`;
+  const side=$('tlside'); side.innerHTML=h;
+  side.querySelectorAll('[data-p]').forEach(el=>el.onclick=()=>{
+    FOCUS=el.dataset.p; render();});
+}
+
+function chapter(ch){
+  const list=D.events.filter(e=>e.ch===ch);
+  const tm=(D.times||[]).find(x=>x.ch===ch)||{};
+  const by={};
+  list.forEach(e=>{by[D.lanes[e.p].name]=e;});
+  let h=`<h3>第${ch}回</h3><p class="small">${esc(tm.title||'')}`
+   +`　${esc(tm.season||'')}${tm.term?'·'+esc(tm.term):''}　共 ${list.length} 条故事实</p>`;
+  const rows=Object.keys(by).sort((a,b)=>{
+    const ia=D.lanes.findIndex(l=>l.name===a), ib=D.lanes.findIndex(l=>l.name===b);
+    return ia-ib;});
+  h+=rows.map(n=>{const e=by[n], t=D.types[e.y];
+    return `<p class="small" style="border-bottom:1px dotted #e9ddc7;padding:2px 0">`
+      +`<b>${esc(n)}</b> <span style="color:${t.color}">${esc(t.name)}</span> `
+      +`${esc(e.a)}${e.pl?'（'+esc(e.pl)+'）':''}`
+      +` <span data-e="${e.i}" style="color:#9e2b25;cursor:pointer">〔看原文〕</span></p>`;}).join('');
+  if(!rows.length) h+=`<p class="small">这一回无人在场。</p>`;
+  const side=$('tlside'); side.innerHTML=h;
+  side.querySelectorAll('[data-e]').forEach(el=>el.onclick=()=>{
+    panel(D.events.find(x=>x.i===+el.dataset.e));});
+}
+
+function note(){
+  const busiest=(D.times||[]).filter(t=>!t.src||t.src==='本')
+    .map(t=>({ch:t.ch,n:D.events.filter(e=>e.ch===t.ch).length}))
+    .sort((a,b)=>b.n-a.n)[0];
+  const top=D.lanes.slice(0,4).map(l=>`${esc(l.name)} ${l.n}`).join('　');
+  $('tlnote').innerHTML=`<b>怎么读</b><br>`
+    +`一・一幕之内，众人同在同一时地：看同一竖列上并排的点，即是「同一时间谁在做什么」。<br>`
+    +`二・点的颜色是<b>事件类目</b>，大小是此人在该幕出现的多寡。<br>`
+    +`三・中间断处即是此人不在场上——<b>缺席也是信息</b>，比如黛玉系列在後半断得厉害。<br>`
+    +`四・最热闹的一回：<b>第${busiest?busiest.ch:'—'}回</b>（${busiest?busiest.n:0} 条故事实）。<br>`
+    +`五・故事实最多的人物：${top}。`;
+}
+
+function tabs(){
+  let h='<tr><th>类目</th><th>释例</th><th>标志词（抽样）</th><th>事件数</th></tr>';
+  D.types.forEach(t=>{
+    h+=`<tr><td><span style="color:${t.color}">■</span> ${esc(t.name)}</td>`
+      +`<td>${esc(t.gloss)}</td>`
+      +`<td class="small">${esc((t.verbs||[]).slice(0,8).join('、'))}</td>`
+      +`<td>${t.n||0}</td></tr>`;});
+  $('tltype').innerHTML=h;
+  let a='<tr><th>回</th><th>回目</th><th>锚点事件</th><th>在场者</th><th>核验词</th></tr>';
+  (D.anchors||[]).forEach(k=>{
+    a+=`<tr style="cursor:pointer" data-ch="${k.ch}"><td>${k.ch}</td>`
+      +`<td class="small">${esc(k.title||'')}</td><td>${esc(k.name)}</td>`
+      +`<td class="small">${esc((k.actors||[]).join('、'))}</td>`
+      +`<td class="small">验：${esc(k.term)}</td></tr>`;});
+  $('tlanchor').innerHTML=a;
+  $('tlanchor').querySelectorAll('[data-ch]').forEach(tr=>tr.onclick=()=>{
+    CONT=+tr.dataset.ch>80||CONT; chapter(+tr.dataset.ch);});
+}
+
+fetch('data/timeline.json').then(r=>r.json()).then(d=>{
+  D=d; tabs(); note(); render();
+  document.querySelectorAll('button.tlbtn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('button.tlbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); LANES=+b.dataset.n; render();});
+  $('tlcont').onclick=()=>{CONT=!CONT; $('tlcont').classList.toggle('on',CONT); render();};
+}).catch(e=>{$('tlnote').innerHTML='时序数据未成：'+e;});
 </script></body></html>
