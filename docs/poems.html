@@ -14,12 +14,90 @@
 <h2>诗词本体</h2>
 <div class="card small">脂本前八十回共录诗词曲赋 <b>187</b> 首
 （判词、红楼梦曲、灯谜、花签、联句、诔文一并收录）。
-下列分布可点：按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
+<b>诗谶、雅集、意象指纹与诗风度量见下</b>；若要逐首翻检，
+页末「逐首总览」可按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
 <div class="grid">
 <div class="card"><h3>体裁</h3><span class='tag'>七绝 52</span><span class='tag'>七律 24</span><span class='tag'>判词 20</span><span class='tag'>五绝 18</span><span class='tag'>曲 15</span><span class='tag'>词/曲 14</span><span class='tag'>五律 9</span><span class='tag'>词 8</span><span class='tag'>花签 8</span><span class='tag'>联句 6</span><span class='tag'>歌行 5</span><span class='tag'>谣谚 1</span><span class='tag'>对联 1</span><span class='tag'>六言 1</span><span class='tag'>四言 1</span><span class='tag'>四言谜 1</span><span class='tag'>偈 1</span><span class='tag'>酒令 1</span><span class='tag'>诔 1</span></div>
 <div class="card"><h3>作者</h3><span class='tag'>未详（叙述者/集体） 78</span><span class='tag'>（警幻新制） 14</span><span class='tag'>林黛玉 14</span><span class='tag'>贾宝玉 12</span><span class='tag'>薛宝琴 9</span><span class='tag'>贾探春 5</span><span class='tag'>史湘云 5</span><span class='tag'>薛宝钗 5</span><span class='tag'>香菱 4</span><span class='tag'>贾元春 3</span><span class='tag'>贾迎春 3</span><span class='tag'>贾惜春 3</span><span class='tag'>李纨 3</span><span class='tag'>贾雨村 2</span><span class='tag'>（批宝玉） 2</span><span class='tag'>花袭人 2</span></div>
 <div class="card"><h3>高频意象</h3><span class='tag'>玉 43</span><span class='tag'>春 42</span><span class='tag'>云 34</span><span class='tag'>金 31</span><span class='tag'>梦 28</span><span class='tag'>水 26</span><span class='tag'>秋 24</span><span class='tag'>月 23</span><span class='tag'>山 18</span><span class='tag'>夜 18</span><span class='tag'>霜 17</span><span class='tag'>雪 16</span><span class='tag'>菊 15</span><span class='tag'>影 13</span></div>
 </div>
+<h2>诗谶 · 诗里先说出的结局</h2>
+<div class="card small">
+《红楼》的诗不是点缀，是判词：一个人的下场，往往先在他的诗里说完，本人才姗姗走去。
+此处逐句回到原文核过——<b>核不中的句子不入谱</b>（本体录 <span id="poOmenAll">…</span> 条，
+核得 <span id="poOmenN">…</span> 条）。点一行即见它与前后原文连读的样子。
+谶有两类：一类是册籍与曲子，由警幻说出，众人听不懂；一类是本人自作，
+如黛玉的葬花吟、宝钗的柳絮词——<b>自己写自己的结局，而自己并不知道</b>。
+</div>
+<div class="card"><div class="gtools" id="poOmenCats"></div></div>
+<div class="gwrap">
+  <div class="card samples" id="poOmens"></div>
+  <aside class="card gside" id="poOmenSide"><p class="small">点一句看它的谶意与应验。</p></aside>
+</div>
+
+<h2>雅集 · 谁在哪一回与谁作诗</h2>
+<div class="card small">
+大观园的诗不是一人独吟，是一群人凑在一处比才情：起社、限韵、联句、掣签。
+下表按回次排开每一场，写明谁在场、作什么体裁、库内该回录得几首；
+<b>末一列是这一场在全书里的分量</b>——海棠社定钗黛之高下，
+芦雪庵联句是众人最后一次热闹，中秋联句只剩黛玉湘云妙玉三人。
+</div>
+<div class="card"><table id="poSalonTab"></table></div>
+
+<h2>呼吸 · 诗在第几回停了</h2>
+<div class="card small">
+诗词是作者的呼吸。前四十回几乎回回有诗，后四十回却越来越稀——
+不是大观园的人不会作诗了，是<b>作者不再让他们作</b>。
+下图每回一根，高者为诗数；下方两栏是前后半之别，一并算出每万字的密度。
+</div>
+<div class="card gcanvas">
+  <div class="gtools"><span class="gstat" id="poDensStat"></span></div>
+  <svg id="poDens" viewBox="0 0 1080 240" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+<div class="grid" id="poHalves"></div>
+
+<h2>意象指纹 · 各人笔下的世界</h2>
+<div class="card small">
+同一个大观园，各人眼里的事物不同：黛玉满纸是泪是花是秋，
+宝钗偏要写淡写雪写青云，湘云嘴里是鹿肉是鹤是醉。
+下图每人一条，按意象出现的次数摊开；<b>右侧一列是本体论里人工著录的诗风画像</b>，
+算法与定评并列，读者自可比对。<br>
+<span class="small">此处的统计只取<b>确可能出于此人之手</b>的诗（判词、花签、太虚曲虽系于此人，
+却是册籍与签上旧诗，不作数，故不列入）。</span>
+</div>
+<div class="card"><div class="legend" id="poImgLegend"></div>
+  <svg id="poImg" viewBox="0 0 1080 420" preserveAspectRatio="xMidYMin meet"></svg></div>
+<div class="card samples" id="poPoets"></div>
+
+<h2>诗风度量 · 算法算出来的脾气</h2>
+<div class="card small">
+下列四项皆由文本算出，不假人手：<b>均句长</b>（一句几字）、
+<b>意象密度</b>（意象字占比）、<b>虚词密度</b>（愈高则愈近散文）、
+<b>偶句同韵率</b>（愈高则愈是诗）。末一列「独用字」是此人有而他作者全无之字，
+最见个人脾性；惟其人所存之诗愈少，这一栏愈不可当真，只作参证。<br>
+<span class="small">原未署作者的那些，只凭<b>别号署名</b>一种证据补判（蘅芜君、潇湘妃子、蕉下客……
+社诗本是这样署名的）；<b>证据不足者仍作「未详」，不硬派</b>——
+派错一个人，他的意象指纹与诗风度量就都脏了。此次共补
+<b id="poFilled">…</b> 首，读者可逐首自核。</span>
+</div>
+<div class="card"><table id="poStyleTab"></table></div>
+
+<h2>韵脚 · 全书诗里最常落在这几个字上</h2>
+<div class="card small">
+不分词牌韵部，只数各句末字落谁最多。这些字本身就是大观园的底色。
+</div>
+<div class="card"><div id="poRhyme" class="legend"></div></div>
+
+<h2>自知之明 · 算法也会看走眼</h2>
+<div class="card small">
+抽取诗词靠「齐言 + 低虚词 + 偶句同韵」三道判据，散文里的骈句也会被误认。
+下表列出置信最低的一十四首：其中确有散文误判（如混入的「十斤五钱」一流），
+也有真诗被切碎者（如曲子的散句）——<b>低置信未必是错，只是尚待人工一断</b>。
+与其装作全对，不如把疑处摆出来。
+</div>
+<div class="card"><table id="poDoubtTab"></table></div>
+
+<h2>逐首总览 · 共 187 首</h2>
 <div class="card small">体裁：
 <select id="genre"><option value="">全部</option></select>
 作者：<select id="author"><option value="">全部</option></select>
@@ -62,4 +140,137 @@ fetch('data/poems.json').then(r=>r.json()).then(ps=>{
   }
   gsel.onchange=show;asel.onchange=show;kw.oninput=show;show();
 });
+
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let D=null,CAT=null;
+
+function omens(){
+  const cats=['全部'].concat(D.cats);
+  $('poOmenCats').innerHTML=cats.map(c=>
+    `<button data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $('poOmenCats').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    CAT=b.dataset.c;omens();});
+  $('poOmenCats').querySelectorAll('button').forEach((b,i)=>{
+    b.className=((CAT===null&&i===0)||CAT===b.dataset.c)?'on':'';});
+  drawOmens();
+}
+function drawOmens(){
+  const list=D.omens.filter(o=>CAT===null||CAT==='全部'||o.cat===CAT);
+  $('poOmens').innerHTML=list.map((o,i)=>
+    `<div data-i="${i}"><span class="tag">${esc(o.cat)}</span>`
+    +`<span class="tag">第${o.ch}回</span><b>${esc(o.verse)}</b>`
+    +`<br><span class="small">${esc(o.piece)} · ${esc(o.who)}</span></div>`).join('')
+    ||'<p class="small">此类别暂无。</p>';
+  $('poOmens').querySelectorAll('div[data-i]').forEach(el=>el.onclick=()=>{
+    const o=list[+el.dataset.i];
+    $('poOmenSide').innerHTML=`<h3>${esc(o.verse)}</h3>`
+      +`<p class="small">${esc(o.piece)} · 第${o.ch}回 · 所指 ${esc(o.who)}</p>`
+      +`<p><b>谶意</b>：${esc(o.omen)}</p>`
+      +`<p><b>应验</b>：${esc(o.fulfill)}</p>`
+      +`<p class="small">…${esc(o.ctx)}…</p>`;
+  });
+  $('poOmenN').textContent=D.omens.length;
+  $('poOmenAll').textContent=D.stats.omen_all;
+}
+
+function salons(){
+  let h='<thead><tr><th>回</th><th>名目</th><th>在场</th><th>体裁</th>'
+    +'<th>诗数</th><th>按语</th></tr></thead><tbody>';
+  D.salons.forEach(s=>{
+    h+=`<tr><td>第${s.ch}回</td><td><b>${esc(s.name)}</b></td>`
+      +`<td class="small">${esc(s.cast)}</td><td>${esc(s.genre)}</td>`
+      +`<td>${s.n}${s.poets.length?'<br><span class="small">'+esc(s.poets.slice(0,6).join('、'))+'</span>':''}</td>`
+      +`<td class="small">${esc(s.note)}</td></tr>`;});
+  $('poSalonTab').innerHTML=h+'</tbody>';
+}
+
+function density(){
+  const W=1080,H=240,PL=34,PB=26,PT=8;
+  const mx=Math.max(1,...D.density.map(d=>d.n));
+  const bw=(W-PL-10)/D.density.length;
+  let s='';
+  D.density.forEach((d,i)=>{
+    const h=(H-PB-PT)*(d.n/mx), x=PL+i*bw, y=H-PB-h;
+    s+=`<rect x=${x.toFixed(1)} y=${y.toFixed(1)} width=${(bw-1.2).toFixed(1)} height=${Math.max(0.6,h).toFixed(1)} `
+      +`fill="${d.ch>40?'#9e2b25':'#3b4a6b'}" opacity=".8"><title>第${d.ch}回 · ${d.n} 首</title></rect>`;
+    if(d.ch%10===0||d.n===mx) s+=`<text x=${(x+bw/2).toFixed(1)} y=${H-12} font-size=9 fill="#8a7f6d" text-anchor="middle" font-family="serif">${d.ch}</text>`;
+  });
+  s+=`<line x1=${PL} y1=${H-PB} x2=${W-6} y2=${H-PB} stroke="#e0d5c0"/>`;
+  s+=`<text x=${PL} y=${H-PB-4} font-size=10 fill="#8a7f6d" font-family="serif">最多 ${mx} 首/回</text>`;
+  $('poDens').innerHTML=s;
+  $('poDensStat').innerHTML=`灰蓝为前四十回，朱红为后四十回 · 共 ${D.stats.poems} 首 / ${D.stats.lines} 句，散在 ${D.stats.chaps} 回`;
+  $('poHalves').innerHTML=D.stats.halves.map(hf=>
+    `<div class="card"><h3>第${hf.a}—${hf.b}回</h3>`
+    +`<big>${hf.n}</big> 首 · ${hf.lines} 句<br>`
+    +`<span class="small">${hf.chaps} 回，每万字 <b>${hf.dens}</b> 首</span></div>`).join('');
+}
+
+function fingerprint(){
+  const ps=D.poets.filter(p=>p.images.length);
+  const W=1080,PL=128,PR=250,rowH=Math.min(24,404/Math.max(1,ps.length));
+  const pal=['#9e2b25','#3b4a6b','#b08d57','#6b8a3f','#8a7f6d','#c2504a','#4a6b8a','#7d1f1b'];
+  // 颜色按全书意象总谱固定，各人同色同物，方可横比
+  const top=D.images.slice(0,8).map(i=>i[0]);
+  const colorOf=im=>{const k=top.indexOf(im);return k<0?'#d9ceb9':pal[k%pal.length];};
+  $('poImgLegend').innerHTML=top.map((t,i)=>
+    `<span><i style="background:${pal[i%pal.length]}"></i>${esc(t)}</span>`).join('')
+    +'<span><i style="background:#d9ceb9"></i>其他</span>'
+    +'<span class="small">（颜色按全书意象总谱固定，每人一行，按次数摊开）</span>';
+  let s='';
+  ps.forEach((p,i)=>{
+    const y=10+i*rowH, tot=p.images.reduce((a,x)=>a+x[1],0)||1;
+    s+=`<text x=${PL-8} y=${y+rowH/2+4} text-anchor="end" font-size=12 fill="#3a322a" font-family="serif">${esc(p.name)}</text>`;
+    let x=PL;
+    p.images.slice(0,8).forEach(im=>{
+      const w=(im[1]/tot)*(W-PL-PR);
+      s+=`<rect x=${x.toFixed(1)} y=${y+3} width=${Math.max(0.5,w).toFixed(1)} height=${rowH-8} `
+        +`fill="${colorOf(im[0])}" opacity=".78"><title>${esc(p.name)} · ${esc(im[0])} ${im[1]}</title></rect>`;
+      x+=w;});
+    s+=`<text x=${W-PR+8} y=${y+rowH/2+4} font-size=10.5 fill="#8a7f6d" font-family="serif">`
+      +`${esc((p.style||'').slice(0,18))}</text>`;});
+  $('poImg').innerHTML=s;
+  $('poPoets').innerHTML=ps.map(p=>
+    `<div><b>${esc(p.name)}</b> <span class="tag">${p.n} 首 / ${p.lines} 句</span>`
+    +(p.style?`<br><span class="small">画像：${esc(p.style)}</span>`:'')
+    +(p.voice?`<br><span class="small">声口：${esc(p.voice)}</span>`:'')
+    +(p.taboo?`<br><span class="small">不为：${esc(p.taboo)}</span>`:'')
+    +(p.own.length?`<br><span class="small">独用字：${esc(p.own.join('、'))}</span>`:'')
+    +`</div>`).join('');
+}
+
+function styletab(){
+  let h='<thead><tr><th>作者</th><th>首</th><th>句</th><th>均句长</th>'
+    +'<th>意象密度</th><th>虚词密度</th><th>偶句同韵率</th><th>独用字</th></tr></thead><tbody>';
+  D.poets.forEach(p=>{
+    h+=`<tr><td><b>${esc(p.name)}</b></td><td>${p.n}</td><td>${p.lines}</td>`
+      +`<td>${p.len_avg}</td><td>${p.yix}</td><td>${p.xu}</td><td>${p.rhyme}</td>`
+      +`<td class="small">${esc(p.own.slice(0,6).join('、'))}</td></tr>`;});
+  $('poStyleTab').innerHTML=h+'</tbody>';
+  $('poFilled').textContent=D.stats.filled;
+}
+
+function rhyme(){
+  const mx=Math.max(1,...D.rhymes.map(r=>r[1]));
+  $('poRhyme').innerHTML=D.rhymes.map(r=>{
+    const w=10+Math.round(16*r[1]/mx);
+    return `<span class="tag" style="font-size:${w}px">${esc(r[0])} ${r[1]}</span>`;}).join('');
+}
+
+function doubt(){
+  let h='<thead><tr><th>回</th><th>题</th><th>体裁</th><th>置信</th>'
+    +'<th>虚词</th><th>意象</th><th>同韵</th><th>首句</th></tr></thead><tbody>';
+  D.doubt.forEach(d=>{
+    h+=`<tr><td>第${d.ch}回</td><td>${esc(d.title||'（无题）')}</td><td>${esc(d.genre)}</td>`
+      +`<td>${d.conf}</td><td>${d.xu}</td><td>${d.yix}</td><td>${d.rhyme}</td>`
+      +`<td class="small">${esc(d.text)}…</td></tr>`;});
+  $('poDoubtTab').innerHTML=h+'</tbody>';
+}
+
+fetch('data/poetics.json').then(r=>r.json()).then(d=>{
+  D=d;
+  omens();salons();density();fingerprint();styletab();rhyme();doubt();
+}).catch(e=>{console.log('poetics:',e);});
+})();
 </script></body></html>

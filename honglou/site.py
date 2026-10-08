@@ -13,7 +13,7 @@ calendar.html     岁时行事：十六桩节铺成十二月令，同一节令�
 cuisine.html      食单茶酒谱：八类名物逐回钩出，见招待由杂转而稀薄
 costume.html      衣冠谱：本体论的衣冠一门（成衣/首服/足衣/佩饰/雨具），
                   第四十九回雪地群像与服色考，并续写待接之衣的账单
-poems.html        诗词本体：体裁、作者、意象、谶应
+poems.html        诗词本体与深析：体裁、作者、意象，及诗谶、雅集、诗风度量
 debate.html       多 Agent 推演全过程（含技术组的统计证据）
 continuation.html 续写正文 + 风格门禁 + 脂砚斋批点
 graph.html        本体图谱（自绘力导向图，无外部依赖）
@@ -35,8 +35,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from . import (annotators, calendar, climate, costume, cuisine, db, garden,
-               graph, imagery, mirror, money, paths, relics, theme, timeline,
-               tree, versions)
+               graph, imagery, mirror, money, paths, poetics, relics, theme,
+               timeline, tree, versions)
 from . import clues as ledger      # 避让 build_site 内的同名局部变量 clues
 
 SITE = paths.SITE_DIR
@@ -384,6 +384,9 @@ def export_data() -> None:
     (DATA / 'poems.json').write_text(
         json.dumps(poems, ensure_ascii=False), encoding='utf-8')
 
+    # --- 诗词深析（诗谶、雅集、意象指纹、诗风度量，见 honglou/poetics.py）
+    poetics.build(DATA)
+
     # --- 推演
     deb_dir = paths.data('debates')
     debates = []
@@ -542,7 +545,8 @@ def build_site() -> Path:
 房内、侍婢、旁系五类，铺成<b>荣房 / 宁房 / 亲族外戚 / 太虚神话</b>四卷世系树：
 一房一牌位，主位、配偶、妾侍各有所归，虚线是隔代提携、手足与姻娅。</p>
 <a href="tree.html">进入 →</a></div>
-<div class="card"><h3>诗词</h3><p class="small">判词、十二支曲、菊花诗、联句、灯谜、花签……含意象与韵基统计。</p>
+<div class="card"><h3>诗词</h3><p class="small">判词、十二支曲、菊花诗、联句、灯谜、花签……
+并有<b>诗谶谱、雅集年表、意象指纹与诗风度量</b>：诗里先说出的结局，与各人笔下的世界。</p>
 <a href="poems.html">进入 →</a></div>
 <div class="card"><h3>推演</h3><p class="small">多 Agent 立论、质证、裁决全过程，含技术组的统计证据。</p>
 <a href="debate.html">进入 →</a></div>
@@ -669,12 +673,14 @@ def build_site() -> Path:
 <h2>诗词本体</h2>
 <div class="card small">脂本前八十回共录诗词曲赋 <b>{len(poems_all)}</b> 首
 （判词、红楼梦曲、灯谜、花签、联句、诔文一并收录）。
-下列分布可点：按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
+<b>诗谶、雅集、意象指纹与诗风度量见下</b>；若要逐首翻检，
+页末「逐首总览」可按体裁、作者筛选，或输入关键词（如 落花、判词、黛玉）。</div>
 <div class="grid">
 <div class="card"><h3>体裁</h3>{chips(gcnt)}</div>
 <div class="card"><h3>作者</h3>{chips(acnt)}</div>
 <div class="card"><h3>高频意象</h3>{chips(icnt)}</div>
-</div>
+</div>""" + poetics.BODY + f"""
+<h2>逐首总览 · 共 {len(poems_all)} 首</h2>
 <div class="card small">体裁：
 <select id="genre"><option value="">全部</option></select>
 作者：<select id="author"><option value="">全部</option></select>
@@ -682,7 +688,8 @@ def build_site() -> Path:
 <span id="count" class="small"></span></div>
 <div id="list"></div>"""
     (SITE / 'poems.html').write_text(
-        _page('诗词', body, 'poems.html', JS_POEMS), encoding='utf-8')
+        _page('诗词', body, 'poems.html', JS_POEMS + poetics.JS),
+        encoding='utf-8')
 
     # ---------- debate
     dd = json.loads((DATA / 'debates.json').read_text(encoding='utf-8'))

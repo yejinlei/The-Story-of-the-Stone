@@ -94,6 +94,12 @@ CREATE TABLE IF NOT EXISTS poet_style(person VARCHAR PRIMARY KEY, style VARCHAR,
 CREATE TABLE IF NOT EXISTS festivals(id INTEGER, chapter VARCHAR,
     solar_term VARCHAR, event VARCHAR);
 
+CREATE TABLE IF NOT EXISTS verse_omens(verse VARCHAR PRIMARY KEY, chapter INTEGER,
+    piece VARCHAR, who VARCHAR, omen VARCHAR, fulfill VARCHAR, category VARCHAR);
+
+CREATE TABLE IF NOT EXISTS salons(chapter INTEGER, name VARCHAR,
+    participants VARCHAR, genre VARCHAR, note VARCHAR);
+
 CREATE TABLE IF NOT EXISTS lost_clues(id INTEGER, clue VARCHAR,
     source VARCHAR, meaning VARCHAR);
 
@@ -277,6 +283,12 @@ def build(force: bool = True) -> Path:
     con.executemany('INSERT INTO festivals VALUES (?,?,?,?)', [
         (i, f['chapter'], f['solar_term'], f['event'])
         for i, f in enumerate(seed.festivals())])
+    con.executemany('INSERT INTO verse_omens VALUES (?,?,?,?,?,?,?)', [
+        (o['verse'], o['chapter'], o['piece'], o['who'], o['omen'], o['fulfill'],
+         o['category']) for o in seed.verse_omens()])
+    con.executemany('INSERT INTO salons VALUES (?,?,?,?,?)', [
+        (s['chapter'], s['name'], s['participants'], s['genre'], s['note'])
+        for s in seed.salons()])
     con.executemany('INSERT INTO lost_clues VALUES (?,?,?,?)', [
         (i, c['clue'], c['source'], c['meaning'])
         for i, c in enumerate(seed.lost_clues())])
