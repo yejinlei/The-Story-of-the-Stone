@@ -26,3 +26,6 @@ logs/
 # 系统
 .DS_Store
 Thumbs.db
+
+# 浏览器调试产物
+.playwright-cli/

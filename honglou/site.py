@@ -510,8 +510,9 @@ def build_site() -> Path:
 <div class="grid">
 <div class="card"><h3>正文 · 脂批</h3><p class="small">按回阅读，可按版本（甲戌/庚辰…）与批注类型（眉批/侧批/夹批）过滤。</p>
 <a href="read.html">进入 →</a></div>
-<div class="card"><h3>本体实体</h3><p class="small">人物、居所、物件、概念、意象、典故、诗风画像。</p>
-<a href="entities.html">进入 →</a></div>
+<div class="card"><h3>本体实体</h3><p class="small">人物、居所、物件、概念、意象、典故、诗风画像。
+另附<b>谐音双关谱</b>：甄士隐＝真事隐、霍启＝祸起、十里街＝势利街，人物地名皆藏谶。</p>
+<a href="entities.html#puns">进入 →</a></div>
 <div class="card"><h3>银钱账簿</h3><p class="small">逐回抽出每一处写到数目的钱：
 <b>二十两＝庄家人一岁之用</b>（第三十九回螃蟹宴），而同一二十两在琏二爷房里只是三五天。
 附数目阶梯、荣府工资表与典当借贷的逐回疏密。</p>
@@ -635,7 +636,7 @@ def build_site() -> Path:
     body = f"""
 <h2>人物（按提及热度）</h2>
 <table><tr><th>姓名</th><th>谐音</th><th>身份</th><th>居所</th><th>情榜</th><th>探佚结局</th><th>提及</th></tr>{rows}</table>
-<h2>谐音双关谱（人物与地名之命名寓意）</h2>
+<h2 id="puns">谐音双关谱（人物与地名之命名寓意）</h2>
 <p class="small">曹雪芹好用谐音藏谶：人名即判词，地名即注脚。凡按语末标「疑」者，
 为后世通行而脂批未明之解，存而不论。</p>
 <table><tr><th>名目</th><th>谐音</th><th>所指</th><th>类别</th><th>按语</th></tr>{punrows}</table>

@@ -34,7 +34,7 @@
 《红楼》从不写干支年月日，只写「次日」「这日」「一时」——所以<b>「同一时间」要靠自己拼</b>。
 这里把八十回正文按书场标记（且说、次日、这日、话说……）切成一幕一幕，
 判明每幕有谁<b>真的在场有言语动作</b>（不是被旁人提起），就此排成泳道：
-<b>横轴是回次与场内次第，纵轴是人物，一个点就是一条故事实</b>，点开有原文可е核实。
+<b>横轴是回次与场内次第，纵轴是人物，一个点就是一条故事实</b>，点开即见原文，可当场核对。
 点上端回次，可见该回所有人各自的营生；点左边人名，则只看这一人的行迹。
 </div>
 <div class="card gtools">
@@ -57,7 +57,7 @@
   <aside class="card gside" id="tlside"><p class="small">点一个点，或点上端回次。</p></aside>
 </div>
 
-<h2>事件本体 · 十六类目光 mgbdating</h2>
+<h2>事件本体 · 十六类目光之下</h2>
 <div class="card small">
 类目是自制的一把尺：每条故事实据本人所在句子的标志词定类，取最重者，规则可复算。
 下表诸类的事件数，即八十回（加推演三十回）里这种事的疏密。
@@ -66,7 +66,7 @@
 
 <h2>锚点事件 · 人工著录而以书核之</h2>
 <div class="card small">
-以下几桩大事由人工著录，构建时拿原书去重查：条本次活动券核验词须在<b>正文或回目里真的出现</b>，
+以下几桩大事由人工著录，构建时拿原书去重查：每条的核验词须在<b>正文或回目里真的出现</b>，
 验不中的一律不显示。点一格即跳到该回，看当时谁在做什么。
 </div>
 <div class="card"><table id="tlanchor"></table></div>
@@ -165,6 +165,7 @@ fetch('data/calendar.json').then(r=>r.json()).then(d=>{
     `<div style="margin-bottom:10px"><h3>${esc(k)}</h3><p>${esc(D.notes[k])}</p></div>`).join('');
 });
 
+(function(){
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 let D=null, LANES=16, CONT=false, SELTYPE=null, FOCUS=null, EV=[];
@@ -337,7 +338,7 @@ function note(){
   $('tlnote').innerHTML=`<b>怎么读</b><br>`
     +`一・一幕之内，众人同在同一时地：看同一竖列上并排的点，即是「同一时间谁在做什么」。<br>`
     +`二・点的颜色是<b>事件类目</b>，大小是此人在该幕出现的多寡。<br>`
-    +`三・中间断处即是此人不在场上——<b>缺席也是信息</b>，比如黛玉系列在後半断得厉害。<br>`
+    +`三・中间断处即是此人不在场上——<b>缺席也是信息</b>，比如黛玉这条线在後半断得厉害。<br>`
     +`四・最热闹的一回：<b>第${busiest?busiest.ch:'—'}回</b>（${busiest?busiest.n:0} 条故事实）。<br>`
     +`五・故事实最多的人物：${top}。`;
 }
@@ -368,4 +369,5 @@ fetch('data/timeline.json').then(r=>r.json()).then(d=>{
     b.classList.add('on'); LANES=+b.dataset.n; render();});
   $('tlcont').onclick=()=>{CONT=!CONT; $('tlcont').classList.toggle('on',CONT); render();};
 }).catch(e=>{$('tlnote').innerHTML='时序数据未成：'+e;});
+})();
 </script></body></html>
