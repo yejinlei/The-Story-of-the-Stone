@@ -377,6 +377,7 @@ def build(force: bool = True) -> Path:
     # --- 人物提及
     con.executemany('INSERT INTO mentions VALUES (?,?,?,?)', _mentions(corpus))
 
+    # 推演与续写无法从底本重算，务必迁回；写回失败要出声，不可静默丢稿
     for t, rows in keep.items():
         if not rows:
             continue
@@ -385,7 +386,10 @@ def build(force: bool = True) -> Path:
         ).fetchone()[0]
         con.executemany(
             f'INSERT INTO {t} VALUES ({",".join(["?"] * ncol)})', rows)
-        con.execute(f"INSERT INTO meta VALUES ('kept_{t}', ?)", [str(len(rows))])
+        got = con.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0]
+        if got != len(rows):
+            raise RuntimeError(f'重建库时 {t} 迁回不全：应有 {len(rows)} 行，实得 {got} 行')
+        con.execute(f"INSERT INTO meta VALUES ('kept_{t}', ?)", [str(got)])
 
     con.execute("INSERT INTO meta VALUES ('built_at', ?)",
                 [datetime.now().isoformat(timespec='seconds')])

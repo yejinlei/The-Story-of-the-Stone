@@ -31,6 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -495,9 +496,22 @@ def export_data() -> None:
     return stats
 
 
+def _copy_background() -> bool:
+    """把底纹画（docs/背景.jpg）复制进 assets/bg.jpg，供 CSS 的 body::before 铺底。
+
+    画缺席时站点照旧（薄纱盖在纸色上），不必因缺图而报错。
+    """
+    src = SITE / '背景.jpg'
+    if not src.exists():
+        return False
+    shutil.copyfile(src, ASSET / 'bg.jpg')
+    return True
+
+
 def build_site() -> Path:
     stats = export_data()
     (ASSET / 'app.css').write_text(CSS, encoding='utf-8')
+    _copy_background()
 
     # ---------- index
     ed = '、'.join(f'{r["edition"]} {r["n"]}' for r in stats['editions'][:6])
