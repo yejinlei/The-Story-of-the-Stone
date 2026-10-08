@@ -104,6 +104,17 @@ CREATE TABLE IF NOT EXISTS variants(id INTEGER, chapter VARCHAR,
     category VARCHAR, lemma VARCHAR, reading_a VARCHAR, reading_b VARCHAR,
     gloss VARCHAR);
 
+CREATE TABLE IF NOT EXISTS event_types(key VARCHAR PRIMARY KEY, name VARCHAR,
+    gloss VARCHAR, verbs VARCHAR, color VARCHAR);
+
+CREATE TABLE IF NOT EXISTS events(id BIGINT PRIMARY KEY, sid BIGINT,
+    chapter INTEGER, seq INTEGER, person VARCHAR, etype VARCHAR,
+    place VARCHAR, acts VARCHAR, quote VARCHAR, speech INTEGER, n INTEGER,
+    t DOUBLE, season VARCHAR, epoch INTEGER, src VARCHAR);
+
+CREATE TABLE IF NOT EXISTS puns(name VARCHAR PRIMARY KEY, pun VARCHAR,
+    gloss VARCHAR, category VARCHAR, note VARCHAR);
+
 CREATE TABLE IF NOT EXISTS mentions(
     person VARCHAR, chapter INTEGER, block_id BIGINT, n INTEGER);
 
@@ -238,6 +249,9 @@ def build(force: bool = True) -> Path:
          p['fate'], json.dumps(p['traits'], ensure_ascii=False),
          json.dumps(p['aliases'], ensure_ascii=False), p['registry'])
         for p in seed.persons()])
+    con.executemany('INSERT INTO puns VALUES (?,?,?,?,?)', [
+        (p['name'], p['pun'], p['gloss'], p['category'], p['note'])
+        for p in seed.puns()])
     con.executemany('INSERT INTO places VALUES (?,?,?,?)', [
         (p['name'], p['category'], p['belongs'], p['note']) for p in seed.places()])
     con.executemany('INSERT INTO objects VALUES (?,?,?,?)', [
@@ -272,6 +286,11 @@ def build(force: bool = True) -> Path:
     con.executemany('INSERT INTO variants VALUES (?,?,?,?,?,?,?)', [
         (i, v['chapter'], v['category'], v['lemma'], v['reading_a'],
          v['reading_b'], v['gloss']) for i, v in enumerate(seed.variants())])
+    # 事件类目只落种子的空壳，故事实由 timeline.py 抽出后填入 events
+    con.executemany('INSERT INTO event_types VALUES (?,?,?,?,?)', [
+        (t['name'], t['name'], t['gloss'],
+         json.dumps(t['verbs'], ensure_ascii=False), '')
+        for t in seed.event_types()])
 
     # --- 诗词
     poems, _ = extract(corpus)
