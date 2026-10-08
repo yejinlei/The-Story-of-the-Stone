@@ -43,6 +43,10 @@ GARMENT = ['衣裳', '衣服', '衣', '袄', '褂', '裙', '靴', '帽', '氅', 
            '衫', '绦', '笠', '蓑', '屐', '披风', '斗篷', '斗蓬', '抹额', '勒子',
            '朝靴', '汗巾', '兜肚', '抹胸', '孝服', '素服', '巾']
 
+# 转手之词：有此，则衣裳只是经手，非其人身上之物
+HANDOVER = ['与了', '给了', '递与', '拿出', '取出', '送来', '送与', '赏了',
+            '赏给', '交给', '转送']
+
 SCENE_RE = re.compile('[^。；！？\n]{0,30}(?:' + '|'.join(WEAR_VERBS)
                       + ')[^。；！？\n]{0,46}')
 
@@ -137,6 +141,53 @@ def _subject_before(text: str, pos: int, span: int = 30) -> str:
 
 def _canon(nm: str) -> str:
     return _person_index()[1].get(nm, nm) if nm else ''
+
+
+def _is_garment_color(text: str, i: int, j: int) -> bool:
+    """这个色字真在写衣裳吗？两样不是：脸色（「入画也黄了脸」）、
+    白身（「贾敬虽白衣无功于国」，白衣谓无功名，非素衣之色）。"""
+    if '了脸' in text[j:j + 3] or '了面' in text[j:j + 3]:
+        return False
+    if text[i:j + 1] == '白衣':
+        return False
+    return True
+
+
+def _who_color(text: str, pos: int, span: int = 18) -> str:
+    """一处服色归谁：一，取色字之前最近的穿戴动词，其主语即其人
+    （主语或远在句首，「一时史湘云来了……头上戴着…」，故以本句为界，
+    不拘三十字）；二，无动词则退守色字所在分句内最近的人名，分句之外
+    不认人；三，转手之衣不当算在经手人名下。
+
+    旧稿是以子句起点去回溯动词，长句里窗口常落空，服色遂无处安身
+    （史湘云五件而零色、贾母三件而零色）；空手之后又退到「句内最近的
+    人名」，于是尤三姐的「绿裤红鞋」跑到宝玉身上。今以「色字自身」为准，
+    且宁缺勿夺他人之衣。
+    """
+    for v in WEAR_VERBS:
+        k = text.rfind(v, max(0, pos - span), pos)
+        if k >= 0:
+            a = k
+            while a > 0 and text[a - 1] not in '。；！？\n' and k - a < 60:
+                a -= 1
+            nm = _subject_before(text, k, span=max(1, k - a))
+            if nm:
+                return nm
+    a = pos
+    while a > 0 and text[a - 1] not in '。；！？，、“”' and pos - a < 60:
+        a -= 1
+    b = pos
+    while b < len(text) and text[b] not in '。；！？\n' and b - pos < 60:
+        b += 1
+    if any(h in text[a:b] for h in HANDOVER):
+        # 转手之衣：当归受者（「…拿出来，与了袭人」），不归经手之人（平儿）
+        k2 = -1
+        for h in HANDOVER:
+            t = text.find(h, pos, b)
+            if t >= 0:
+                k2 = max(k2, t + len(h))
+        return _subject_before(text, b, span=max(1, b - k2)) if k2 >= 0 else ''
+    return _subject_before(text, pos, span=max(1, pos - a))
 
 
 _SENT_START = re.compile(r'[。；！？\n]')
@@ -297,10 +348,14 @@ def build(dst: Path | None = None) -> Path:
                 who = _who(text, i, j)
                 owner = _owner_nearby(clause, a2o)
                 for cm in _RE.finditer(clause):
+                    a, b = i + cm.start(), i + cm.end()
+                    if not _is_garment_color(text, a, b):
+                        continue
                     colors.append(dict(ch=ch, src=src,
                                        fam=_TERM2FAM[cm.group()],
                                        term=cm.group(),
-                                       who=owner or who, ctx=clause))
+                                       who=owner or _who_color(text, a),
+                                       ctx=clause))
                 scenes.append(dict(ch=ch, src=src, who=owner or who, text=clause))
     # 漏网之色：不在任何衣事之内、却贴着衣裳本体字十字以内者
     for src, book in books:
@@ -313,9 +368,12 @@ def build(dst: Path | None = None) -> Path:
                 near = text[max(0, i - 10):j + 10]
                 if not any(g in near for g in GARMENT):
                     continue
+                if not _is_garment_color(text, i, j):
+                    continue
                 colors.append(dict(ch=ch, src=src, fam=_TERM2FAM[m.group()],
                                    term=m.group(),
-                                   who=_owner_nearby(near, a2o) or _who(text, i, j),
+                                   who=_owner_nearby(near, a2o)
+                                   or _who_color(text, i),
                                    ctx=_ctx(text, i, j)))
 
     # ---- 三・逐回疏密
