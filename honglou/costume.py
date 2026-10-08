@@ -450,7 +450,10 @@ def build(dst: Path | None = None) -> Path:
                             fams=[[k, f[k]] for k, _ in f.most_common()],
                             items=[[k, w[k]] for k, _ in w.most_common(6)]))
     persons.sort(key=lambda p: (-(p['acts'] + p['colors']), p['name']))
-    persons = persons[:24]
+    # 凡身上有衣冠记录者尽数列出，不复截断：色数排序一变，零色之人
+    # （贾珍、石呆子、邢岫烟）便要被挤出榜外，而他们正是「本来就没有」
+    # 的那几位，恰是要人看见的
+    persons = persons[:40]
 
     # ---- 五・第四十九回雪地群像
     #      这一回各人分什么衣裳，本体论里已按原文写定 owner（非由算法猜测）；
