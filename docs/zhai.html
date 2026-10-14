@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>风月债 · 泪尽此身 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="costume.html" class="">衣冠</a><a href="versions.html" class="">版本谱</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="ontology.html" class="">本末</a><a href="qing.html" class="">情根</a><a href="zhai.html" class="on">风月债</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<div class="hero">
+  <span class="seal solid">债</span>
+  <div class="verse">欠命的，命已还；欠泪的，泪已尽</div>
+  <div class="rule"></div>
+  <p class="lead" id="lead"></p>
+</div>
+<div id="stat" class="legend"></div>
+
+<h2>存在之债 · 四环</h2>
+<p class="small">债之<b class="muted">始</b>（灌溉之恩）、<b class="muted">显</b>（风月之债）、<b class="muted">行</b>（泪尽还债）、<b class="muted">了</b>（泪尽命还）——人物以「欠」与「还」在世，债清则存在复归于空。</p>
+<div id="dims" class="grid"></div>
+
+<h2>欠债之人 · 存在者</h2>
+<p class="small">绛珠欠泪、神瑛施露、顽石欠补天、香菱欠命、十二钗系于册簿——皆为以偿还而存在之人。</p>
+<div id="debtors"></div>
+
+<h2>偿债之途</h2>
+<p class="small">以泪偿、以命偿、以了偿、情债难偿、业孽缘情而积——欠者各有其还。</p>
+<div id="economy"></div>
+
+<h2>「欠」与「向终结存在」之会通</h2>
+<div id="dialogue"></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>存在论推演由多 Agent 就脂本文本质证而成，仅供研究玩索。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const href=c=>c<=80?('read.html#'+c):('continuation.html#c'+c);
+let D=null;
+function render(){
+  $('lead').textContent=D.meta.desc;
+  $('stat').textContent=
+    `${D.meta.title}　·　债之历程 ${D.dimensions.length}　欠债之人 ${D.debtors.length}　`+
+    `偿债之途 ${D.economy.length}`;
+  // 四环
+  $('dims').innerHTML=D.dimensions.map(r=>`<div class="card">
+    <h3><span class="seal">${esc(r.seal)}</span>　${esc(r.name)} <span class="tag">${esc(r.tag)}</span></h3>
+    <p class="small"><b>${esc(r.anchor)}</b></p>
+    <p>${esc(r.text)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(r.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`).join('');
+  // 欠债之人
+  $('debtors').innerHTML=D.debtors.map(b=>`<div class="card">
+    <h3>${esc(b.name)} <a class="small" href="${href(b.ch)}">第${b.ch}回</a></h3>
+    <p class="small"><b>所欠：</b>${esc(b.owe)}<br>
+    <b>所偿：</b>${esc(b.repay)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(b.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+    <p class="small muted">${esc(b.note)}</p>
+  </div>`).join('');
+  // 偿债之途
+  $('economy').innerHTML=`<div class="card"><table><tr><th>账目</th><th>还法</th><th>欠者</th><th>证</th><th>回</th></tr>`+
+    D.economy.map(p=>`<tr><td class="small">${esc(p.k)}</td><td class="small">${esc(p.v)}</td>`+
+      `<td class="small">${esc(p.src)}</td><td class="small">${esc(p.cite)}</td><td class="small">${p.ch}</td></tr>`).join('')+
+    `</table></div>`;
+  // 会通
+  $('dialogue').innerHTML=`<div class="card"><h3>${esc(D.dialogue.label)}</h3><p class="small">${esc(D.dialogue.intro)}</p>`+
+    D.dialogue.points.map(p=>`<p class="small"><b>${esc(p.q)}</b>　${esc(p.a)}</p>`).join('')+
+    `<p class="small muted">${esc(D.dialogue.caveat)}</p></div>`;
+}
+fetch('data/zhai.json').then(r=>r.json()).then(d=>{D=d;render();})
+.catch(e=>{document.body.insertAdjacentHTML('beforeend','<p class="small" style="padding:20px">数据加载失败：'+esc(e)+'</p>');});
+</script></body></html>
