@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>梦境 · 太虚幻境 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="costume.html" class="">衣冠</a><a href="versions.html" class="">版本谱</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="ontology.html" class="">本末</a><a href="qing.html" class="">情根</a><a href="zhai.html" class="">风月债</a><a href="se.html" class="">色空</a><a href="meng.html" class="on">梦境</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<div class="hero">
+  <span class="seal solid">梦境</span>
+  <div class="verse" id="verse"></div>
+  <div class="rule"></div>
+  <p class="lead" id="lead"></p>
+</div>
+<div id="stat" class="legend"></div>
+
+<h2>幻境之建制 · 五象</h2>
+<p class="small">离恨天在上，灌愁海在下，放春山在左，遣香洞在右，太虚幻境居中——前五象之合，方有此境。</p>
+<div id="realm"></div>
+
+<h2>警幻仙姑</h2>
+<div id="keeper"></div>
+
+<h2>梦之六场 · 先知到梦醒</h2>
+<p class="small">从甄士隐第一梦，到警幻示册与曲，从贾瑞之鉴，到可卿托梦，从香菱梦中得诗，至尤三姐「耻情而觉」——梦之六场，即全书认识论之骨架。</p>
+<div id="dreams"></div>
+
+<h2>册与曲 · 十二与十四</h2>
+<p class="small">「十二钗」实为四副三十六人，脂批明言「至末回警幻情榜，方知正副、再副及三四副芳讳」；「十二支曲」实为引子一支加正曲十二支加收尾一支，共十四支。</p>
+<div id="covenant"></div>
+<div id="songs" class="small"></div>
+
+<h2>「梦之剧场」与「梦之认识论」</h2>
+<div id="dialogue"></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>本体论推演由本工程多 Agent 就脂本文本质证而成，仅供研究玩索。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const href=c=>c<=80?('read.html#'+c):('continuation.html#c'+c);
+let D=null;
+function render(){
+  $('verse').textContent=D.meta.verse;
+  $('lead').textContent=D.meta.desc;
+  $('stat').textContent=
+    `${D.meta.title}　·　幻境建制 ${D.realm.length}　梦之场数 ${D.dreams.length}　`+
+    `册·页 ${D.covenant.n}　曲·支 ${D.songs.n}　警幻出场 ${D.keeper.n}`;
+  // 幻境建制
+  $('realm').innerHTML=D.realm.map(r=>`<div class="card">
+    <h3><span class="seal">${esc(r.seal)}</span>　${esc(r.name)} <span class="tag">${esc(r.tag)}</span>
+      <a class="small" href="${href(r.ch)}">第${r.ch}回</a></h3>
+    <p class="small"><b>${esc(r.anchor)}</b></p>
+    <p>${esc(r.text)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(r.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`).join('');
+  // 警幻
+  const k=D.keeper;
+  $('keeper').innerHTML=`<div class="card">
+    <h3><span class="seal solid">${esc(k.seal)}</span>　${esc(k.name)}
+      <a class="small" href="${href(5)}">第5回</a>　<span class="small muted">全库出现 ${k.n} 次 · ${(k.chs||[]).map(x=>'第'+x+'回').join('、')}</span></h3>
+    <p>${esc(k.intro)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(k.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`;
+  // 梦之六场
+  $('dreams').innerHTML=D.dreams.map(r=>`<div class="card">
+    <h3><span class="seal">${esc(r.seal)}</span>　${esc(r.name)} <span class="tag">${esc(r.tag)}</span>
+      <a class="small" href="${href(r.ch)}">第${r.ch}回</a></h3>
+    <p class="small"><b>${esc(r.anchor)}</b></p>
+    <p>${esc(r.text)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(r.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`).join('');
+  // 册
+  const c=D.covenant;
+  $('covenant').innerHTML=`<div class="card">
+    <h3><span class="seal">${esc(c.seal)}</span>　${esc(c.name)}
+      <span class="small muted">共 ${c.n} 页 · 正册·副册·又副册（末回还有再副·三四副）</span></h3>
+    <p class="small"><b>${esc(c.anchor)}</b></p>
+    <p>${esc(c.intro)}</p>
+    <p class="small muted">${esc(c.note)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(c.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`;
+  // 曲
+  const s=D.songs;
+  $('songs').innerHTML=`<div class="card"><h3><span class="seal">${esc(s.seal)}</span>　${esc(s.name)}
+      <span class="small muted">共 ${s.n} 支 · 引子 + 正曲十二 + 收尾</span></h3>
+    <p>${esc(s.intro)}</p>
+    <ol style="margin:6px 0 6px 1.4em;padding-left:0;line-height:1.95">
+      ${s.list.map(x=>`<li class="small"><b>${x.no}·${esc(x.name)}</b>　<span class="muted">— ${esc(x.text)}</span></li>`).join('')}
+    </ol>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(s.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`;
+  // 会通
+  $('dialogue').innerHTML=`<div class="card"><h3>${esc(D.dialogue.label)}</h3><p class="small">${esc(D.dialogue.intro)}</p>`+
+    D.dialogue.points.map(p=>`<p class="small"><b>${esc(p.q)}</b>　${esc(p.a)}</p>`).join('')+
+    `<p class="small muted">${esc(D.dialogue.caveat)}</p></div>`;
+}
+fetch('data/meng.json').then(r=>r.json()).then(d=>{D=d;render();})
+.catch(e=>{document.body.insertAdjacentHTML('beforeend','<p class="small" style="padding:20px">数据加载失败：'+esc(e)+'</p>');});
+</script></body></html>
