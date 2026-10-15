@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hans"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>色空 · 皮囊与归空 · 红楼未完</title>
+<link rel="stylesheet" href="assets/app.css"></head>
+<body>
+<header>
+  <span class="seal">未完</span>
+  <h1>红楼未完</h1>
+  <div class="sub">鲥鱼多刺 · 海棠无香 · 《红楼》未完</div>
+  <nav><a href="index.html" class="">总览</a><a href="read.html" class="">正文·脂批</a><a href="entities.html" class="">本体实体</a><a href="tree.html" class="">族谱</a><a href="money.html" class="">银钱</a><a href="cuisine.html" class="">食单</a><a href="costume.html" class="">衣冠</a><a href="versions.html" class="">版本谱</a><a href="calendar.html" class="">岁时</a><a href="relics.html" class="">物色</a><a href="poems.html" class="">诗词</a><a href="debate.html" class="">推演</a><a href="continuation.html" class="">续写</a><a href="graph.html" class="">图谱</a><a href="mirror.html" class="">字镜</a><a href="climate.html" class="">冷暖谱</a><a href="garden.html" class="">园图</a><a href="clues.html" class="">伏线</a><a href="imagery.html" class="">意象</a><a href="ontology.html" class="">本末</a><a href="qing.html" class="">情根</a><a href="zhai.html" class="">风月债</a><a href="se.html" class="on">色空</a><a href="annotators.html" class="">批者</a></nav>
+</header>
+<main>
+<div class="hero">
+  <span class="seal solid">色空</span>
+  <div class="verse">因空见色　由色生情　传情入色　自色悟空</div>
+  <div class="rule"></div>
+  <p class="lead" id="lead"></p>
+</div>
+<div id="stat" class="legend"></div>
+
+<h2>存在之回路 · 四段</h2>
+<p class="small">空→色→情→色→空。四段之中，<b class="muted">空</b> 与 <b class="muted">假</b> 归本末，<b class="muted">情</b> 归情根，<b class="muted">还</b> 归风月债，独 <b class="muted">色</b> 这一环——借来的形——在本页立论。</p>
+<div id="cycle"></div>
+
+<h2>色身显影 · 四重</h2>
+<p class="small">色身非自然长成，而是「幻形」所予；艳色如花，皮囊为空；白骨如山，姓氏皆忘；赤条条去，唯余一白。四重皆由正文与脂批点出。</p>
+<div id="stages"></div>
+
+<h2>形骸之词 · 词的分布</h2>
+<p class="small">全书不见「色身」二字，「色空」亦仅作铁槛寺住持之名——色，是以<b class="muted">代名词群</b>出现的：皮囊、白骨、骷髅、赤条条，以及一七一次之「幻」。</p>
+<div id="lexicon"></div>
+
+<h2>「色」之义层</h2>
+<p class="small">同一字，四重义：姣色、色法、贪色、无色——义层之分正合回路之转。</p>
+<div id="sense"></div>
+
+<h2>「借来的形」与「色空之相生」</h2>
+<div id="dialogue"></div>
+</main>
+<footer>
+  <span class="seal">脂本</span>
+  <div>底本：吴铭恩《红楼梦脂评汇校本》（脂本前八十回 + 各本脂批）。</div>
+  <div>本体论推演由本工程多 Agent 就脂本文本质证而成，仅供研究玩索。</div>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const href=c=>c<=80?('read.html#'+c):('continuation.html#c'+c);
+const cs={jade:'var(--jade)',indigo:'var(--indigo)',cinnabar:'var(--cinnabar)',gold:'var(--gold)'};
+let D=null;
+function render(){
+  $('lead').textContent=D.meta.desc;
+  $('stat').textContent=
+    `${D.meta.title}　·　回路环节 ${D.cycle.length}　显影之重 ${D.stages.length}　`+
+    `形骸之词 ${D.lexicon.length}　色之义层 ${D.sense.length}`;
+  // 回路
+  $('cycle').innerHTML=D.cycle.map(r=>{
+    const col=cs[r.color]||'var(--ink2)';
+    const lnk=r.link?`<a class="small" href="${r.link}">→ ${esc(r.linkname)}</a>`:'';
+    return `<div class="card">
+    <h3><span class="seal" style="background:${col};color:#fff">${esc(r.seal)}</span>　${esc(r.name)} <span class="tag">${esc(r.tag)}</span> ${lnk}</h3>
+    <p class="small"><b>${esc(r.anchor)}</b></p>
+    <p>${esc(r.text)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(r.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`;}).join('');
+  // 显影之重
+  $('stages').innerHTML=D.stages.map(r=>`<div class="card">
+    <h3><span class="seal">${esc(r.seal)}</span>　${esc(r.name)} <span class="tag">${esc(r.tag)}</span>
+      <a class="small" href="${href(r.ch)}">第${r.ch}回</a></h3>
+    <p class="small"><b>${esc(r.anchor)}</b></p>
+    <p>${esc(r.text)}</p>
+    <ul style="margin:6px 0 6px 1.2em;padding-left:0;line-height:1.9">${(r.evidence||[]).map(e=>`<li class="small">${esc(e)}</li>`).join('')}</ul>
+  </div>`).join('');
+  // 形骸之词
+  $('lexicon').innerHTML=`<div class="card"><table><tr><th>词</th><th>见</th><th>回目</th><th>义</th><th>例</th></tr>`+
+    D.lexicon.map(p=>`<tr><td class="small"><b>${esc(p.k)}</b></td><td class="small">${p.n}</td>`+
+      `<td class="small">${(p.chs||[]).map(x=>'第'+x+'回').join('、')}</td>`+
+      `<td class="small">${esc(p.gloss)}</td><td class="small muted">${esc(p.ref)}</td></tr>`).join('')+
+    `</table></div>`;
+  // 义层
+  $('sense').innerHTML=D.sense.map(s=>`<div class="card small">
+    <b>${esc(s.k)}</b>　<span class="muted">— ${esc(s.sense)}</span>
+    <ul style="margin:6px 0 0 1.2em;padding-left:0;line-height:1.9">
+      ${esc(s.ex)?`<li>${esc(s.ex)}</li>`:''}${esc(s.ex2)?`<li>${esc(s.ex2)}</li>`:''}</ul>
+  </div>`).join('');
+  // 会通
+  $('dialogue').innerHTML=`<div class="card"><h3>${esc(D.dialogue.label)}</h3><p class="small">${esc(D.dialogue.intro)}</p>`+
+    D.dialogue.points.map(p=>`<p class="small"><b>${esc(p.q)}</b>　${esc(p.a)}</p>`).join('')+
+    `<p class="small muted">${esc(D.dialogue.caveat)}</p></div>`;
+}
+fetch('data/se.json').then(r=>r.json()).then(d=>{D=d;render();})
+.catch(e=>{document.body.insertAdjacentHTML('beforeend','<p class="small" style="padding:20px">数据加载失败：'+esc(e)+'</p>');});
+</script></body></html>
